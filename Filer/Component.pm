@@ -110,7 +110,7 @@ sub store {
 	require XML::Writer;
 	my ($output, $writer);
 	$output = new IO::File(">".$self->get('FILENAME')) || throw Oak::Filer::Component::Error::ErrorWritingXML;
-	$writer = new XML::Writer(OUTPUT => $output) || throw Oak::Filer::Component::Error::ErrorWritingXML;
+	$writer = new XML::Writer(OUTPUT => $output, DATA_MODE => 1, DATA_INDENT => 4) || throw Oak::Filer::Component::Error::ErrorWritingXML;
 	$writer->startTag('main');
 	for (keys %{$self->{__MINE__}}) {
 		$writer->startTag('prop', 'name' => $_, 'value' => $self->{__MINE__}{$_});
