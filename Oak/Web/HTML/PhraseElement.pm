@@ -2,7 +2,7 @@ package Oak::Web::HTML::PhraseElement;
 
 use strict;
 use Error qw(:try);
-use base qw(Oak::Web::Visual);
+use base qw(Oak::Web::Container);
 
 =head1 NAME
 
@@ -17,6 +17,8 @@ L<Oak::Persistent|Oak::Persistent>
 L<Oak::Component|Oak::Component>
 
 L<Oak::Web::Visual|Oak::Web::Visual>
+
+L<Oak::Web::Container|Oak::Web::Container>
 
 L<Oak::Web::HTML::PhraseElement|Oak::Web::HTML::PhraseElement>
 
@@ -33,10 +35,6 @@ One of:
 
   EM | STRONG | DFN | CODE | SAMP | KBD | VAR | CITE | ABBR | ACRONYM
   TT | I | B | BIG | SMALL
-
-=item caption
-
-The text inside the tag
 
 =item All other defined by W3C.
 
@@ -56,12 +54,17 @@ sub valid_html_attributes {
 	);
 }
 
-sub show {
+sub start_container {
 	my $self = shift;
 	$self->SUPER::show;
 	print "<".$self->get('type');
 	$self->print_html_attributes;
-	print ">".$self->get('caption')."</".$self->get('type').">\n";
+	print ">";
+}
+
+sub end_container {
+	my $self = shift;
+	print "</".$self->get('type').">";
 }
 
 1;

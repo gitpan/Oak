@@ -1,6 +1,7 @@
 package Oak::Controller;
 
 use strict;
+use Error qw(:try);
 use base qw(Oak::Component);
 
 =head1 NAME
@@ -14,13 +15,13 @@ This is the second of the three layers model.
 
 =head1 HIERARCHY
 
-  L<Oak::Object|Oak::Object>
+L<Oak::Object|Oak::Object>
 
-  L<Oak::Persistent|Oak::Persistent>
+L<Oak::Persistent|Oak::Persistent>
 
-  L<Oak::Component|Oak::Component>
+L<Oak::Component|Oak::Component>
 
-  L<Oak::Controller|Oak::Controller>
+L<Oak::Controller|Oak::Controller>
 
 =head1 PROPERTIES
 
@@ -36,6 +37,18 @@ commit if everything goes fine.
 =item authenticable
 
 Boolean, defines if this module will implement authentication.
+
+=item auth_service
+
+Used if authenticable to define the service definition (see L<Oak::AAS::Session>)
+
+=item auth_userfield
+
+Used if authenticable to define which field in the BAG is the username
+
+=item auth_sessionidfield
+
+Used if authenticable to define which field in the BAG is the password
 
 =back
 
@@ -76,35 +89,34 @@ sub message {
 		$i->begin_work;
 	}
 	$self->dispatch('ev_onMessage');
-	$self->authenticate(%params);
+	if ($self->get('authenticable')) {
+		$self->authenticate;
+	}
 	my $action = $self->get_child($name);
-	my $result = eval {
+	try {
 		$action->call;
-		return 1;
-	};
-	unless ($result) {
-		foreach my $i (@ios) {
-			$i->rollback;
-		}
-		my $e = Error::prior();
-		throw $e if $e;
-		$e = $@;
-		die $@;
-	};
-	if ($self->get('transaction_io')) {
 		foreach my $i (@ios) {
 			$i->commit;
 		}
-	}
+	} otherwise {
+		my $e = shift;
+		foreach my $i (@ios) {
+			$i->rollback;
+		}
+		throw $e;
+	};
 	return $self->{BAG}
 }
 
 =over
 
-=item authenticate(PARAM => VALUE, PARAM => VALUE)
+=item authenticate
 
 If this class is authenticable this methd is called to verify if the user
 is authenticated. If it doesnt, throw an Oak::Controller::Error::Auth
+
+When creating a authenticable controller, remember to set the auth_service, auth_userfield and the auth_sessionidfield
+property.
 
 =back
 
@@ -112,12 +124,23 @@ is authenticated. If it doesnt, throw an Oak::Controller::Error::Auth
 
 sub authenticate {
 	my $self = shift;
-	if ($self->get('authenticable')) {
-		throw Oak::Controller::Error::Auth;
+	require Oak::AAS::Session;
+	$self->{session} = new Oak::AAS::Session
+	  (
+	   service => $self->get('auth_service'),
+	   user => $self->{BAG}{$self->get('auth_userfield')}
+	  );
+	try {
+		$self->{session}->validate
+		  (
+		   user => $self->{BAG}{$self->get('auth_userfield')},
+		   session_id => $self->{BAG}{$self->get('auth_sessionidfield')}
+		  )
+	} otherwise {
+		throw Oak::Controller::Error::Auth
 	}
-	# do nothing
-	return 1;
 }
+
 
 =head1 EXCEPTION HANDLING
 

@@ -53,28 +53,38 @@ Called after the creation of the object
 
 =item constructor
 
-This method is overrided from Oak::Object to create all the owned
-components if it receives the RESTORE parameter with a hashref
-of his and his owned components, or RESTORE_TOPLEVEL with the full
-path of the XML file. Else does nothing. You
-can (and you will want to) pass the OWNER special variable with
-a reference to the object that you want to be the owner of this component.
-If you override this method, you MUST call SUPER.
+A Component can be created in the following ways:
 
-In the case of the name property is not passed in RESTORE, the constructor
-will throw a Oak::Component::Error::MissingComponentName.
+  # 1 - Instanciating a top level
+  my $comp = new MyComponent(RESTORE_TOPLEVEL => "FILENAME_OR_FILEHANDLE");
 
-If this is a top-level component, you can pass the parameter DECLARE_GLOBAL
-to create the $::TL::name reference... (This is used by Oak::Application)
-you probably will not use it by yourself)
+  # 2 - Instanciating a normal component
+  my $comp = new MyComponent(RESTORE => { this => "that", name => "bla" });
 
-If you are designing this component you can use the IS_DESIGNING parameter
-with a true value (this is used by Forest).
+The following options are accepted in the constructor:
 
-In the case of error in one of owned objects, the function will throw:
-- Oak::Component::Error::MissingOwnedClassname if __CLASSNAME__ not found.
-- Oak::Component::Error::MissingOwnedFile if require return a error.
-- Oak::Component::Error::ErrorCreatingOwned if new return false.
+=over
+
+=item IS_DESIGNING
+
+if true, this component will not dispatch any event. Not even ev_onCreate.
+
+=item OWNER
+
+The owner component of this component.
+
+=item DECLARE_GLOBAL
+
+A variable $::TL::component_name will be created in reference to this object.
+If you set this option, remember to undef this variable later.
+
+=back
+
+This function throws the following errors:
+
+  - Oak::Component::Error::MissingOwnedClassname if __CLASSNAME__ not found.
+  - Oak::Component::Error::MissingOwnedFile if require return a error.
+  - Oak::Component::Error::ErrorCreatingOwned if new return false.
 
 =back
 
@@ -83,56 +93,116 @@ In the case of error in one of owned objects, the function will throw:
 sub constructor {
 	my $self = shift;
 	my %parms = @_;
-	if ($parms{IS_DESIGNING}) {
+	if ($parms{IS_DESIGNING}) {		
 		$self->is_designing(1);
+		delete $parms{IS_DESIGNING};
+	}
+	my $owner = undef;
+	if (ref $parms{OWNER}) {
+		$owner = $parms{OWNER};
+		delete $parms{OWNER};
+	}
+	my $declare_global = 0;
+	if ($parms{DECLARE_GLOBAL}) {
+		$declare_global = 1;
+		delete $parms{DECLARE_GLOBAL};
 	}
 	if ($parms{RESTORE_TOPLEVEL}) {
-		# BUILD $parms{RESTORE} HASH.
-		$self->feed("__XML_FILENAME__" => $parms{RESTORE_TOPLEVEL});
-		$self->test_filer("COMPONENT");
-		my $xml_hash = $self->{__filers__}{"COMPONENT"}->load("mine");
-		$parms{RESTORE} = $xml_hash->{mine};
-		$parms{RESTORE}{__owned__} = $xml_hash->{owned};
-		delete $parms{RESTORE_TOPLEVEL};
-	}
-	if (ref($parms{RESTORE}) eq 'HASH') {
-		throw Oak::Component::Error::MissingComponentName -text => ref $self unless $parms{RESTORE}{name};
-		foreach my $p (keys %{$parms{RESTORE}}) {
-			next if $p eq '__owned__';
-			$self->feed($p => $parms{RESTORE}{$p});
-		}
-		if (ref($parms{RESTORE}{__owned__}) eq 'HASH') {
-			foreach my $o (keys %{$parms{RESTORE}{__owned__}}) {
-				# we know about the mandatory property __CLASSNAME__
-				my $class = $parms{RESTORE}{__owned__}{$o}{__CLASSNAME__};
-				throw Oak::Component::Error::MissingOwnedClassname -text => $o unless $class;
-				# We must load the module of the object
-				my $result = eval "require $class";
-				if (!$result || $@) {
-					throw Oak::Component::Error::MissingOwnedFile -text => $o;
-				}
-				my $obj = $class->new
-				  (
-				   RESTORE => $parms{RESTORE}{__owned__}{$o},
-				   IS_DESIGNING => $parms{IS_DESIGNING},
-				   OWNER => $self
-				  );
-				throw Oak::Component::Error::ErrorCreatingOwned -text => $o unless $obj;
-			}
-		}
-		$self->child_update;
+		$self->restore_toplevel($parms{RESTORE_TOPLEVEL});
+	} elsif (ref($parms{RESTORE}) eq 'HASH') {
+		$self->restore($parms{RESTORE});
 	} else {
-		$self->feed(%parms);
-		throw Oak::Component::Error::MissingComponentName -text => ref $self unless $self->get('name');
+		warn "Deprecated behavior called by ".(caller(2))[1]."(".(caller(2))[2]."), Component properties must be passed into the RESTORE hash. This behavior will be disabled in the future\n";
+		$self->restore(\%parms);
 	}
-	if (ref $parms{OWNER}) {
-		$parms{OWNER}->register_child($self);
+	if ($owner) {
+		$owner->register_child($self);
 	}
-	if ($parms{DECLARE_GLOBAL}) {
+	if ($declare_global) {
 		eval '$::TL::'.$self->get('name').' = $self';
 	}
 	return $self->SUPER::constructor(%parms);
 }
+
+=over
+
+=item restore_toplevel($xml_filename)
+
+This function is called when the constructor receives the RESTORE_TOPLEVEL param.
+It loads the toplevel data from the $xml_filename file, calls restore for this
+object and create all the owned components.
+
+=back
+
+=cut
+
+sub restore_toplevel {
+	my $self = shift;
+	my $xml_filename = shift;
+	$self->feed("__XML_FILENAME__" => $xml_filename);
+	$self->test_filer("COMPONENT");
+	my $xml_hash = $self->{__filers__}{"COMPONENT"}->load;
+	$self->restore($xml_hash->{mine});
+	foreach my $o (keys %{$xml_hash->{owned}}) {
+		$self->create_owned($xml_hash->{owned}{$o});
+	}
+}
+
+=over
+
+=item restore($data)
+
+Receives a hash ref with the properties to be restored.
+
+=back
+
+=cut
+
+sub restore {
+	my $self = shift;
+	my $data = shift;
+	throw Oak::Component::Error::MissingComponentName -text => ref $self unless $data->{name};
+	$self->feed(%{$data});
+}
+
+=over
+
+=item create_owned($data)
+
+Creates the owned component specified into the hashref $data.
+
+=back
+
+=cut
+
+sub create_owned {
+	my $self = shift;
+	my $data = shift;
+	# we know about the mandatory property __CLASSNAME__
+	my $class = $data->{__CLASSNAME__};
+	throw Oak::Component::Error::MissingOwnedClassname -text => $data->{name} unless $class;
+	# We must load the module of the object
+	my $result = eval "require $class";
+	if (!$result || $@) {
+		throw Oak::Component::Error::MissingOwnedFile -text => $data->{name};
+	}
+	$class->new
+	  (
+	   RESTORE => $data,
+	   IS_DESIGNING => $self->is_designing,
+	   OWNER => $self
+	  ) || throw Oak::Component::Error::ErrorCreatingOwned -text => $data->{name};
+}
+
+=over
+
+=item after_construction
+
+Overrided to dispatch the ev_onCreate event.
+
+=back
+
+=cut
 
 sub after_construction {
 	my $self = shift;
@@ -331,26 +401,6 @@ sub store_all {
 	   mine => $self->{__properties__},
 	   owned => $self->{__owned__properties__}
 	  );
-}
-
-=over
-
-=item choose_filer
-
-Overrided to choose the COMPONENT filer if this is a top-level component.
-
-=back
-
-=cut
-
-sub choose_filer {
-	my $self = shift;
-	my $prop = shift;
-	if (!defined $self->{__owner__} && $prop ne "__XML_FILENAME__" && $prop ne "__CLASSNAME__") {
-		return 'COMPONENT';
-	} else {
-		return 'default';
-	}
 }
 
 =over

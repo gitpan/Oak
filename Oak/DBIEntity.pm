@@ -34,18 +34,18 @@ and methods written with lower_case_letters are object methods.
 
 =over
 
-=item GetDBIIO
+=item GetDefaultDBIIo
 
-Returns the Oak::IO::DBI object to be used with this class, defaults to
-$::TL::dataModule->dbi. Where dataModule is a Oak::DataModule and dbi
-is the name of the Oak::IO::DBI component. Overrides it if your object
-is in another place.
+Returns the Oak::IO::DBI object to be used if there is not a custom object
+defined by the SetDBIIo method. Defaults to $::TL::dataModule->dbi. Where
+dataModule is a Oak::DataModule and dbi is the name of the Oak::IO::DBI
+component. Overrides it if your object is in another place.
 
 =back
 
 =cut
 
-sub GetDBIIo {
+sub GetDefaultDBIIo {
 	return $::TL::dataModule->dbi;
 }
 
@@ -82,7 +82,7 @@ sub GetFields {
 
 =item GetPrimaryKey
 
-Returns a array reference with the fields that are the primary key of
+Returns an array reference with the fields that are the primary key of
 this object.
 
 When implementing table-distributed classes (subclasses), remember that the primary keys
@@ -94,6 +94,22 @@ of the tables MUST have the same name and value.
 
 sub GetPrimaryKey {
 	return [];
+}
+
+=over
+
+=item GetAutoIncrementFields
+
+Returns a hash reference with the fields that we should auto increment.
+
+The value has no meaning and it is a hash to simplify lookup.
+
+=back
+
+=cut
+
+sub GetAutoIncrementFields {
+	return {};
 }
 
 =over
@@ -141,7 +157,51 @@ sub GetDefaultValues {
 
 =head1 METHODS
 
+=over
+
+=item GetDBIIo
+
+Returns the Oak::IO::DBI object to be used with this class. Use the
+GetDefaultDBIIo or the object defined with the SetDBIIo method.
+
+=back
+
 =cut
+
+sub GetDBIIo {
+	my $class = shift;
+	$class = ref $class || $class;
+	my $obj;
+	eval q|$obj = $|.$class.q|::DBIIo_OBJECT|;
+	unless ($obj) {
+		$obj = $class->GetDefaultDBIIo;
+	}
+	return $obj;
+}
+
+
+
+=over
+
+=item SetDBIIo(obj)
+
+Defines which Oak::DBI::IO object to be used in this class from now on.
+
+Remember that a class variable will be set in this module, so, always you
+set an obj, remember to set undef after using it, else your dbi object will
+never be destroyed.
+
+=back
+
+=cut
+
+sub SetDBIIo {
+	my $class = shift;
+	$class = ref $class || $class;
+	my $obj = shift;
+	eval q|$|.$class.q|::DBIIo_OBJECT = $obj|;
+}
+
 
 ### INTERNAL ### NO NEED FOR DOCS ###
 sub choose_filer {
@@ -302,9 +362,18 @@ sub constructor {
 			throw Oak::DBIEntity::Error::InvalidObject -text => $params{$testPk};
 		}
 	} elsif ($params{create}) {
+		my $autoinc=$self->GetAutoIncrementFields();
 		my $testPk;
 		foreach my $k (@{$self->GetPrimaryKey}) {
-			$self->feed($k => $params{create}{$k});
+			if (exists $params{create}{$k} && defined $params{create}{$k}) {
+				$self->feed($k => $params{create}{$k});
+			} elsif (exists $autoinc->{$k}) {
+ 				my $table=$self->choose_filer($k);
+				$params{create}{$k}=$self->_get_next_value($table,$k);
+				$self->feed($k => $params{create}{$k});
+			} else {
+			       throw Oak::Error::ParamsMissing -text => "Missing the primary key $k";
+			}
 			$testPk = $k;
 		}
 		my $filer = $self->choose_filer($testPk);
@@ -319,6 +388,35 @@ sub constructor {
 	} else {
 		throw Oak::Error::ParamsMissing -text => "Missing the primary keys";
 	}	
+}
+
+sub _get_next_value {
+	my $self=shift;
+	my $table=shift;
+	my $field=shift;
+	my $recursion_count=shift || 0;
+	my $sth;
+	if ($recursion_count>100) {
+		throw Oak::DBIEntity::Error::InvalidObject -text => "Could not allocate next value for $table - $field";
+	}
+	my $sql;
+	my $dbi_io = $self->GetDBIIo();
+	$table=$dbi_io->quote($table);
+	$field=$dbi_io->quote($field);
+	$sql="SELECT id FROM __increments__ WHERE tablename=$table AND field=$field";
+	$sth = $dbi_io->do_sql($sql);
+	my $id=1;
+	if (!$sth->rows) {
+		$sql="INSERT INTO __increments__ (tablename,field,id) VALUES ($table,$field,$id)";
+		return 1 if $sth->rows;
+	}
+	($id)=$sth->fetchrow_array;
+    	$sql="UPDATE __increments__ SET id=id+1 WHERE id=$id AND tablename=$table AND field=$field";
+	$sth=$dbi_io->do_sql($sql);
+	if ($sth->rows) {
+		return ++$id;
+	}
+	$self->_get_next_value($table,$field,$recursion_count+1);
 }
 
 =over

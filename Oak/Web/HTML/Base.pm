@@ -40,7 +40,7 @@ sub valid_html_attributes {
 sub show {
 	my $self = shift;
 	$self->SUPER::show;
-	print "<LINK";
+	print "<BASE";
 	print $self->print_html_attributes;
 	print ">\n";
 }

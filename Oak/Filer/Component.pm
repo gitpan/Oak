@@ -28,7 +28,7 @@ L<Oak::Filer::Component|Oak::Filer::Component>
 
 =item FILENAME
 
-The name of the XML file. Defined by constructor
+The name of the XML file. Defined by constructor. Or a string that represents a filehandle. Ex.: PACKAGE::DATA
 
 =back
 
@@ -48,7 +48,6 @@ Overwrited to test the existance of XML file.
 sub constructor{
 	my $self = shift;
 	my %parms = @_;
-	throw Oak::Filer::Component::Error::XMLInexistent unless -f $parms{FILENAME};
 	$self->set('FILENAME' => $parms{FILENAME});
 	return $self->SUPER::constructor(%parms);
 }
@@ -74,10 +73,27 @@ sub load {
 	my $what = shift;
 	require XML::Parser;
 	my ($xml, $xml_hash);
+	my $xmlsource;
+	if (-f $self->get('FILENAME')) {
+		local $/;
+		open(XMLFILE, $self->get('FILENAME')) || throw Oak::Filer::Component::Error::ErrorReadingXML;
+		$xmlsource = <XMLFILE>;
+		close XMLFILE;
+	} else {
+		local $/;
+		my $xmlfh = eval '\*'.$self->get('FILENAME');
+		my $filepos = tell($xmlfh);
+		$xmlsource = <$xmlfh>;
+		seek($xmlfh,$filepos,0);
+	}
+	throw Oak::Filer::Component::Error::ErrorReadingXML unless $xmlsource;
 	try {
+		local $Oak::Filer::Component::XMLHandlers::OWNEDNAME = '';
+		local %Oak::Filer::Component::XMLHandlers::OWNED = ();
+		local %Oak::Filer::Component::XMLHandlers::MINE = ();
 		$xml = new XML::Parser(Style => 'Oak::Filer::Component::XMLHandlers');
-		$xml_hash = $xml->parsefile($self->get('FILENAME'));
-	} except {
+		$xml_hash = $xml->parse($xmlsource);
+	} otherwise {
 		throw Oak::Filer::Component::Error::ErrorReadingXML;
 	};
 	throw Oak::Filer::Component::Error::ErrorReadingXML unless ref $xml_hash eq "HASH";
@@ -111,6 +127,8 @@ sub store {
 	my ($output, $writer);
 	$output = new IO::File(">".$self->get('FILENAME')) || throw Oak::Filer::Component::Error::ErrorWritingXML;
 	$writer = new XML::Writer(OUTPUT => $output, DATA_MODE => 1, DATA_INDENT => 4) || throw Oak::Filer::Component::Error::ErrorWritingXML;
+	$writer->xmlDecl("iso-8859-1");
+	$writer->doctype("oak-component","Perl Oak Component Definition","http://perl-oak.sourceforge.net/dtd/Component.dtd");
 	$writer->startTag('oak-component');
 	foreach my $k (sort keys %{$self->{__MINE__}}) {
 		next if $k eq "__XML_FILENAME__";
@@ -255,6 +273,7 @@ __END__
 
 Copyright (c) 2001
 Daniel Ruoso <daniel@ruoso.com>
+Marcelo de Paula Bezerra <mosca@oktiva.com.br>
 All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -2,7 +2,7 @@ package Oak::Web::HTML::H;
 
 use strict;
 use Error qw(:try);
-use base qw(Oak::Web::Visual);
+use base qw(Oak::Web::Container);
 
 =head1 NAME
 
@@ -18,6 +18,8 @@ L<Oak::Component|Oak::Component>
 
 L<Oak::Web::Visual|Oak::Web::Visual>
 
+L<Oak::Web::Container|Oak::Web::Container>
+
 L<Oak::Web::HTML::H|Oak::Web::HTML::H>
 
 
@@ -30,10 +32,6 @@ The Oak::Web::HTML::H object has the following properties:
 =item level
 
 The level of the header, from 1 to 6.
-
-=item caption
-
-The text inside the tag
 
 =item All other defined by W3C.
 
@@ -54,12 +52,16 @@ sub valid_html_attributes {
 	);
 }
 
-sub show {
+sub start_container {
 	my $self = shift;
-	$self->SUPER::show;
 	print "<H".($self->get('level') || "1");
 	$self->print_html_attributes;
-	print ">".$self->get('caption')."</H".($self->get('level') || "1").">\n";
+	print ">";
+}
+
+sub end_container {
+	my $self = shift;
+	print "</H".($self->get('level') || "1").">\n";
 }
 
 1;

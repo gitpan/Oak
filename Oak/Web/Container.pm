@@ -25,6 +25,15 @@ L<Oak::Web::Visual|Oak::Web::Visual>
 
 L<Oak::Web::Container|Oak::Web::Container>
 
+=head1 PROPERTIES
+
+=over
+
+=item content
+
+The content of the tag. Printed before the start_row.
+
+=back
 
 =head1 METHODS
 
@@ -72,6 +81,7 @@ sub show {
 		$placement[$y][$x] = $child;
 	}
 	$self->start_container;
+	print $self->get('content');
 	for (my $y = 0;$y <= $maxy; $y++) {
 		$self->start_row;
 		for (my $x = 0; $x <= $maxx; $x++) {

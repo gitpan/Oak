@@ -2,7 +2,7 @@ package Oak::Web::HTML::Button;
 
 use strict;
 use Error qw(:try);
-use base qw(Oak::Web::Visual);
+use base qw(Oak::Web::Container);
 
 =head1 NAME
 
@@ -58,12 +58,16 @@ sub valid_html_attributes {
 	);
 }
 
-sub show {
+sub start_container {
 	my $self = shift;
 	$self->SUPER::show;
 	print "<BUTTON";
 	print $self->print_html_attributes;
 	print ">\n";
+}
+
+sub end_container {
+	print "</BUTTON>";
 }
 
 1;

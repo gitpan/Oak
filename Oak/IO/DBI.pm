@@ -156,7 +156,7 @@ Quotes a string, using DBI->quote unless empty, else uses "''".
 
 sub quote {
 	my $self = shift;
-	my $str = shift;
+	my $str = shift || "";
 	$self->connect;
 	unless (($str eq '') || (!defined $str)) {
 		$str = $self->{dbh}->quote($str);
@@ -290,25 +290,6 @@ sub stringify {
 }
 
 __END__
-
-=head1 EXAMPLES
-
-  require Oak::IO::DBI;
-
-  my $io = new Oak::IO::DBI
-   (
-    name     => "IODBI",	# mandatory (see Oak::Component)
-    dbdriver => "mysql",	# mandatory, any supported by DBI
-    database => "mydatabase",	# mandatory
-    hostname => "hostname",	# mandatory
-    username => "dbusername",	# optional
-    password => "userpasswd",	# optional
-    options => { DBI OPTIONS },	# optional. A hash reference to DBI options
-   )
-
-  P.S.: In the case of the automatic creation by an owner object all the
-  properties will be passed through the RESTORE hash and the OWNER variable.
-  See Oak::Component.
 
 =head1 COPYRIGHT
 

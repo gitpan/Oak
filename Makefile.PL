@@ -6,7 +6,7 @@ my $mm = new MM
    AUTHOR => "Daniel Ruoso <daniel\@ruoso.com>",
    ABSTRACT => "Perl Oak Component Tree",
    NAME => "Oak",
-   VERSION => "1.5",
+   VERSION => "1.6",
    PREREQ_PM => 
    {
     'XML::Writer' => '0',

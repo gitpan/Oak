@@ -58,12 +58,12 @@ sub receive_cgi {
 		my $fh = $cgi->upload($self->get('name'));
 		$self->set('filehandle' => $fh);
 	} elsif ($self->get('type') =~ /image/) {
-		if ($cgi->param($self->get('name').'x')) {
+		if ($cgi->param($self->get('name').'.x')) {
 			$self->{__events__}{ev_onClick} = 1;
 			$self->set
 			  (
-			   "x" => $cgi->param($self->get('name').'x'),
-			   "y" => $cgi->param($self->get('name').'y')
+			   "x" => $cgi->param($self->get('name').'.x'),
+			   "y" => $cgi->param($self->get('name').'.y')
 			  )
 		}
 	} elsif ($self->get('type') =~ /checkbox/) {

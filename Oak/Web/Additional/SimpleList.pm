@@ -43,23 +43,46 @@ sub show {
 	$self->SUPER::show;
 	my @lines = split(/\n/, $self->get('list'));
 	my $lastlevel = 0;
-	print "<UL>";
+	print "<UL>\n";
 	foreach my $item (@lines) {
 		my $level = 0;
 		while ($item =~ s/^\s//) {
 			$level++;
 		}
 		while ($level > $lastlevel) {
-			print "<UL>";
+			print "<UL>\n";
 			$lastlevel++;
 		}
 		while ($level < $lastlevel) {
-			print "</UL>";
+			print "</UL>\n";
 			$lastlevel--;
 		}
-		print "<LI>".$item;
+		print "<LI>".$self->format_item($item)."\n";
 	}
-	print "</UL>";
+	while ($lastlevel >= 0) {
+		print "</UL>\n";
+		$lastlevel--;
+	}
+}
+
+=head1 METHODS
+
+=over
+
+=item format_item($item)
+
+Receives the text without the indentation and return it in the
+required format. In SimpleList, it does nothing. But you can
+implement some nice features, like a link.
+
+=back
+
+=cut
+
+sub format_item {
+	my $self = shift;
+	my $item = shift;
+	return $item;
 }
 
 1;
