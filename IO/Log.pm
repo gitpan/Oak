@@ -14,10 +14,14 @@ enable the programmer doing log output.
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Persistent
-  Oak::Component
-  Oak::IO::Log
+L<Oak::Object|Oak::Object>
+
+L<Oak::Persistent|Oak::Persistent>
+
+L<Oak::Component|Oak::Component>
+
+L<Oak::IO::Log|Oak::IO::Log>
+
 
 =head1 PROPERTIES
 

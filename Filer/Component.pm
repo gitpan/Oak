@@ -15,9 +15,12 @@ components. Must pass XML FILENAME
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Filer
-  Oak::Filer::Component
+L<Oak::Object|Oak::Object>
+
+L<Oak::Filer|Oak::Filer>
+
+L<Oak::Filer::Component|Oak::Filer::Component>
+
 
 =head1 PROPERTIES
 

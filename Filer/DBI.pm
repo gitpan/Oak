@@ -16,9 +16,12 @@ a Persistent descendant to save its data. Must pass table, and where
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Filer
-  Oak::Filer::DBI
+L<Oak::Object|Oak::Object>
+
+L<Oak::Filer|Oak::Filer>
+
+L<Oak::Filer::DBI|Oak::Filer::DBI>
+
 
 =head1 PROPERTIES
 
@@ -144,6 +147,28 @@ sub insert {
 	$sql = "INSERT INTO $table SET $set";
 	my $sth = $self->get('io')->do_sql($sql);
 	return $sth;
+}
+
+=over
+
+=item delete
+
+Delete the entry from the table
+
+see Oak::IO::DBI::do_sql for possible exceptions.
+
+=back
+
+=cut
+
+sub delete {
+        my $self = shift;
+        my $table = $self->get('table');
+        my $where = $self->make_where_statement;
+        return 0 unless $table && $where;
+        my $sql = "DELETE FROM $table WHERE $where";
+        $self->get('io')->do_sql($sql);
+        return 1;
 }
 
 #internal function

@@ -17,9 +17,11 @@ the properties.
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Persistent
-  Oak::Component
+L<Oak::Object|Oak::Object>
+
+L<Oak::Persistent|Oak::Persistent>
+
+L<Oak::Component|Oak::Component>
 
 =head1 PROPERTIES
 
@@ -66,6 +68,9 @@ If this is a top-level component, you can pass the parameter DECLARE_GLOBAL
 to create the $::TL::name reference... (This is used by Oak::Application)
 you probably will not use it by yourself)
 
+If you are designing this component you can use the IS_DESIGNING parameter
+with a true value (this is used by Forest).
+
 In the case of error in one of owned objects, the function will throw:
 - Oak::Component::Error::MissingOwnedClassname if __CLASSNAME__ not found.
 - Oak::Component::Error::MissingOwnedFile if require return a error.
@@ -78,6 +83,9 @@ In the case of error in one of owned objects, the function will throw:
 sub constructor {
 	my $self = shift;
 	my %parms = @_;
+	if ($parms{IS_DESIGNING}) {
+		$self->is_designing(1);
+	}
 	if ($parms{RESTORE_TOPLEVEL}) {
 		# BUILD $parms{RESTORE} HASH.
 		$self->feed("__XML_FILENAME__" => $parms{RESTORE_TOPLEVEL});
@@ -105,6 +113,7 @@ sub constructor {
 				my $obj = $class->new
 				  (
 				   RESTORE => $parms{RESTORE}{__owned__}{$o},
+				   IS_DESIGNING => $parms{IS_DESIGNING},
 				   OWNER => $self
 				  );
 				throw Oak::Component::Error::ErrorCreatingOwned unless $obj;
@@ -430,6 +439,8 @@ sub set {
 
 Dispatch the EVENT.
 
+does nothing if the component is designing.
+
 =back
 
 =cut
@@ -437,6 +448,7 @@ Dispatch the EVENT.
 
 sub dispatch {
 	my $self = shift;
+	return 1 if $self->is_designing;
 	my $ev = shift;
 	if ($self->get($ev)) {
 		my $ev = $self->get($ev);

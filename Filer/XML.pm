@@ -25,9 +25,12 @@ An example of the XML file is:
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Filer
-  Oak::Filer::XML
+L<Oak::Object|Oak::Object>
+
+L<Oak::Filer|Oak::Filer>
+
+L<Oak::Filer::XML|Oak::Filer::XML>
+
 
 =head1 PROPERTIES
 

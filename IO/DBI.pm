@@ -14,6 +14,16 @@ Oak::IO::DBI - IO routines to exchange data with databases using DBI
 
 This module provides access for exchange data with databases using DBI.
 
+=head1 HIERARCHY
+
+L<Oak::Object|Oak::Object>
+
+L<Oak::Persistent|Oak::Persistent>
+
+L<Oak::Component|Oak::Component>
+
+L<Oak::IO::DBI|Oak::IO::DBI>
+
 =head1 PROPERTIES
 
 =over 4
@@ -27,7 +37,25 @@ defined using the parameters passed to new.
 
 DBI options. See DBI documentation for more help.
 
-=head1 METHODS
+=back
+
+=head1 EVENTS
+
+=over
+
+=item ev_onConnect
+
+When a connection is openned
+
+=item ev_onSql
+
+When a sql is executed
+
+=item ev_onDisconnect
+
+When the database is explicitly disconnected (not on DESTROY)
+
+=back
 
 =cut
 
@@ -64,11 +92,13 @@ sub _test_required_params {
 	return 1;
 }
 
+=head1 METHODS
+
 =over
 
 =item connect
 
-Register the connection for this object. Generates an onConnect event.
+Register the connection for this object. Generates an ev_onConnect event.
 
 Could raise the Oak::IO::DBI::Error::ConnectionFailure exception.
 
@@ -88,11 +118,7 @@ sub connect {
 	unless ($self->{dbh}) {
 		throw Oak::IO::DBI::Error::ConnectionFailure; # Must raise the exception
 	}
-	if ($self->get('onConnect')) {
-		my $str = $self->get('onConnect').'($self)';
-		eval $str;
-	}
-
+	$self->dispatch('ev_onConnect');
 	return 1;
 }
 
@@ -101,7 +127,7 @@ sub connect {
 =item do_sql(SQL)
 
 Prepare, executes and test if successfull. Returns the Sth.
-Generates an onSql event (passes $sql and $sth to the function called).
+Generates an ev_onSql event (passes $sql and $sth to the function called).
 
 Could rause the following exceptions:
 Oak::Filer::DBI::Error::SQLSyntaxError and Oak::Filer::DBI::Error::SQLExecuteError
@@ -118,10 +144,7 @@ sub do_sql {
 	throw Oak::IO::DBI::Error::SQLSyntaxError -text => $sql unless defined $sth;
 	my $rv = $sth->execute;
 	throw Oak::IO::DBI::Error::SQLExecuteError -text => $sql unless (defined $sth) and ($rv);
-	if ($self->get('onSql')) {
-		my $str = $self->get('onSql').'($self,$sql,$sth)';
-		eval $str;
-	}
+	$self->dispatch('ev_onSql');
 	return $sth;
 }
 
@@ -182,7 +205,7 @@ sub get_dbh {
 =item disconnect
 
 Called by DESTROY, releases the DBI connection. It disconnects.
-Generates a onDisconnect event.
+Generates a ev_onDisconnect event.
 
 =back
 
@@ -192,31 +215,8 @@ sub disconnect {
 	my $self = shift;
 	$self->{dbh}->disconnect if $self->{dbh};
 	$self->{dbh} = undef;
-	if ($self->get('onDisconnect')) {
-		my $str = $self->get('onDisconnect').'($self)';
-		eval $str;
-	}
+	$self->dispatch('ev_onDisconnect');
 	return 1;
-}
-
-=over
-
-=item DESTROY
-
-Disconnects and generates a onDestroy event.
-
-=back
-
-=cut
-
-sub DESTROY {
-	my $self = shift;
-	return $self->disconnect;
-	if ($self->get('onDestroy')) {
-		my $str = $self->get('onDestroy').'($self)';
-		eval $str;
-	}
-	$self->SUPER::DESTROY;
 }
 
 1;

@@ -13,10 +13,14 @@ This object will manage the configuration file for your application
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Persistent
-  Oak::Component
-  Oak::IO::Config
+L<Oak::Object|Oak::Object>
+
+L<Oak::Persistent|Oak::Persistent>
+
+L<Oak::Component|Oak::Component>
+
+L<Oak::IO::Config|Oak::IO::Config>
+
 
 =head1 PROPERTIES
 

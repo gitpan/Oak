@@ -10,8 +10,10 @@ Oak::Filer - Saves Persistent Descendants properties
 
 =head1 HIERARCHY
 
-  Oak::Object
-  Oak::Filer
+L<Oak::Object|Oak::Object>
+
+L<Oak::Filer|Oak::Filer>
+
 
 =head1 DESCRIPTION
 

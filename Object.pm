@@ -8,7 +8,8 @@ Oak::Object - Base for all Oak Perl Object Tree
 
 =head1 HIERARCHY
 
-  Oak::Object
+L<Oak::Object|Oak::Object>
+
 
 =head1 DESCRIPTION
 
@@ -60,7 +61,7 @@ sub new {
 
 This method is called automatically from new. You should not call
 it unless you know what you are doing. The return of this function
-is not checked.  If you want to raise an error use throw (see L<Error>).
+is not checked.  If you want to raise an error use throw (see Error).
 
 MUST CALL SUPER IN THE FUNCTION IF YOU OVERRIDES IT
 
@@ -266,7 +267,7 @@ sub DESTROY {
 
 =head1 EXCEPTION HANDLING
 
-Oak uses the module L<Error> to handle the exceptions with the
+Oak uses the module Error to handle the exceptions with the
 syntax try/throw/catch/except/otherwise/finally. And in this case
 all the errors must be classes. And this module introduces some 
 (for now, just one :).
