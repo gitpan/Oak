@@ -1,0 +1,45 @@
+Oak Perl Component Tree --------------------------
+
+This is a set of modules that implement a tree of objects (based on Oak::Object)
+that looks like the Delphi's VCL. The idea is to make a Complete tree (Including
+support for GUI and WEB applications) to improve the RAD (Rapid Application
+Development) in perl.
+
+It's currently all in perl, but any language which can be embedded into perl
+will be accepted.
+
+The project is currently hosted at Sourcefoge, you can visit it at
+http://www.sourceforge.net/projects/perl-oak
+
+
+INSTALL ------------------------------------------
+
+Follows any other perl library:
+perl Makefile.PL
+make install
+
+
+DEVELOPMENT GUIDELINES ---------------------------
+
+This module is just the base for all the tree. Follows some comments about how to
+create an Oak Class.
+
+. We are using the CPAN perlStyle, (almost) try to keep this.
+. All objects in Oak are descendants of Oak::Object, so, read it's perldoc at first shot.
+. Try to read the perldoc of all the superclasses of your class, it's very important
+  when you override some methods.
+. Nobody implements new, implement constructor instead, but nobody call constructor, call
+  new instead.
+. That's it...
+. Please contact me if you want to develop an Oak Object, if applicable your module will
+  enter in the Oak main distribution.
+
+
+COPYRIGHT ----------------------------------------
+
+Copyright (c) 2001
+Daniel Ruoso <daniel@ruoso.com>
+Aguimar Mendonca Neto <aguimar@email.com.br>
+All rights reserved.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
