@@ -143,8 +143,26 @@ sub restore_toplevel {
 	$self->test_filer("COMPONENT");
 	my $xml_hash = $self->{__filers__}{"COMPONENT"}->load;
 	$self->restore($xml_hash->{mine});
-	foreach my $o (keys %{$xml_hash->{owned}}) {
-		$self->create_owned($xml_hash->{owned}{$o});
+	$self->create_owned_components($xml_hash->{owned});
+}
+
+=over
+
+=item create_owned_components
+
+Creates the components owned by $self
+
+Receives a hash with the owned components.
+
+=back
+
+=cut
+
+sub create_owned_components {
+	my $self=shift;
+	my $xml_owned=shift;
+	foreach my $o (keys %{$xml_owned}) {
+		$self->create_owned($xml_owned->{$o});
 	}
 }
 
@@ -502,7 +520,7 @@ sub dispatch {
 			if (my $err = Error::prior) {
 				$err->throw
 			} else {
-				throw Error::Simple($@);
+				throw Error::Simple $@;
 			}
 		}
 	}

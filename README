@@ -1,48 +1,53 @@
-Oak Perl Component Tree --------------------------
+Module Description
 
-This is a set of modules that implement a tree of objects (based on Oak::Object)
-that looks like the Delphi's VCL. The idea is to make a Complete tree (Including
-support for GUI and WEB applications) to improve the RAD (Rapid Application
-Development) in perl.
+Perl Oak Component Tree - Base modules
+The Perl Oak Component tree is a implementation of a complete
+framework for designing enterprise applications.
 
-It's currently all in perl, but any language which can be embedded into perl
-will be accepted.
+The main areas of Oak are:
+* Base patterns for OOP (liboak-perl)
+* Interface development (liboak-web-perl and future liboak-gtk-perl,
+liboak-tk-perl, liboak-qt-perl)
+* Business Control (liboak-perl, liboak-controller-entityhelper-perl)
+* Data Management (packages liboak-io-dbi-perl, libfiler-dbi-perl,
+liboak-dbientity-perl)
+* Authentication and Authorization (liboak-aas-perl,
+liboak-aas-service-dbi-perl, liboak-aas-service-dbinpam-perl)
+* Distributed System (liboak-soap-perl)
+* System Configuration (liboak-filer-xml-perl, liboak-io-config-perl)
+* Logging (liboak-io-log-perl, liboak-io-log-syslog-perl)
 
-The project is currently hosted at Sourcefoge, you can visit it at
-http://www.sourceforge.net/projects/perl-oak
-
-
-INSTALL ------------------------------------------
-
-Follows any other perl library:
-perl Makefile.PL
-make install
-
-
-DEVELOPMENT GUIDELINES ---------------------------
-
-This module is just the base for all the tree. Follows some comments about how to
-create an Oak Class.
-
-. We are using the CPAN perlStyle, (almost) try to keep this.
-. All objects in Oak are descendants of Oak::Object, so, read it's perldoc at first shot.
-. Try to read the perldoc of all the superclasses of your class, it's very important
-  when you override some methods.
-. Nobody implements new, implement constructor instead, but nobody call constructor, call
-  new instead.
-. Error handling is made using Error module, check is perldoc to underestand what i'm
-  talking about.
-. That's it...
-. Please contact me if you want to develop an Oak Object, if applicable your module will
-  enter in the Oak main distribution.
+For more information and documentation, please refer to
+http://perl-oak.sourceforge.net
 
 
-COPYRIGHT ----------------------------------------
+Copyright
 
-Copyright (c) 2001
-Daniel Ruoso <daniel@ruoso.com>
-Aguimar Mendonca Neto <aguimar@email.com.br>
-Rodolfo Sikora de Melo <vo0do0@trevas.net>
-All rights reserved.
-This program is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+
+Authors:
+
+Project Initiated by:
+ Daniel Ruoso <daniel@ruoso.com>
+
+With the important help of:
+ Aguimar Mendonca Neto <aguimar@email.com.br>
+ Rodolfo Sikora de Melo <vo0do0@trevas.net>
+ Carlos Eduardo de Andrade Brasileiro <eduardo@oktiva.com.br>
+ Marcelo de Paula Bezerra <mosca@oktiva.com.br>
+ Oktiva Telecomunicações e Informática <http://www.oktiva.com.br>
+ Inova Tecnologias <http://www.inova.com.br>
+
+Copyright:
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of either:
+
+a) the GNU General Public License as published by the Free Software
+   Foundation; either version 1, or (at your option) any later
+   version, or
+b) the "Artistic License" which comes with Perl.
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL' and
+the Artistic Licence in `/usr/share/common-licenses/Artistic'.
+

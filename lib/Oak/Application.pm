@@ -100,7 +100,7 @@ sub initiateTopLevel {
 	my $class = $self->get('topLevels')->{$name}[0];
 	my $xmlfile = $self->get('topLevels')->{$name}[1];
 	unless (eval "require $class") {
-		throw Oak::Application::Error::ClassNotFound;
+		throw Oak::Application::Error::ClassNotFound -text => $@;
 	}
 	if (eval 'if (defined $::TL::'.$name.') { die } else { return 1 }') {
 		my $obj = $class->new(RESTORE_TOPLEVEL => $xmlfile, DECLARE_GLOBAL => 1);
@@ -171,7 +171,8 @@ package Oak::Application::Error::ClassNotFound;
 use base qw (Error);
 
 sub stringify {
-	return "Class not found in lib";
+	my $self = shift;
+	return "Class not found in lib: ".$self->{-text};
 }
 
 =over
