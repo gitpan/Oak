@@ -8,27 +8,30 @@ use strict;
 
 Oak::Filer::Component - Filer to save/load data into/from Components
 
-=head1 SYNOPSIS
-
-  require Oak::Filer::Component;
-
-  my $filer = new Oak::Filer::Component(
-					FILENAME => "tralala.xml", # mandatory, any supported by DBI
-				       )
-
-  my $hr_props = $filer->load("mine");
-  my $hr_owned = $filer->load("owned");
-  $filer->store(
-		mine => $hr_props,
-		owned => $hr_owned
-	       );
-
 =head1 DESCRIPTION
 
 This module provides access for saving and reading data into a Component XML, to be used by
 components. Must pass XML FILENAME
 
-=cut
+=head1 HIERARCHY
+
+  Oak::Object
+  Oak::Filer
+  Oak::Filer::Component
+
+=head1 PROPERTIES
+
+=over
+
+=item FILENAME
+
+The name of the XML file. Defined by constructor
+
+=back
+
+=head1 METHODS
+
+=over
 
 =item constructor
 
@@ -48,7 +51,7 @@ sub constructor{
 }
 
 
-=cut
+=over
 
 =item load
 
@@ -81,7 +84,7 @@ sub load {
 	return $self->{__OWNED__} if $what eq 'owned';
 }
 
-=cut
+=over
 
 =item store
 
@@ -191,6 +194,8 @@ sub stringify {
 	return "Missing XML File";
 }
 
+=over
+
 =item Oak::Filer::Component::Error::ErrorReadingXML
 
 This error is throwed when there is some problem with the XML while trying to read it.
@@ -205,6 +210,8 @@ use base qw (Error);
 sub stringify {
 	return "There was something wrong when trying to read the XML file";
 }
+
+=over
 
 =item Oak::Filer::Component::Error::ErrorWritingXML
 
@@ -221,6 +228,32 @@ sub stringify {
 	return "There was something wrong when trying to write the XML file";
 }
 
-
-
 1;
+
+__END__
+
+=head1 EXAMPLES
+
+  require Oak::Filer::Component;
+
+  my $filer = new Oak::Filer::Component(
+					FILENAME => "tralala.xml"
+				       )
+
+  my $hr_props = $filer->load("mine");
+  my $hr_owned = $filer->load("owned");
+  $filer->store(
+		mine => $hr_props,
+		owned => $hr_owned
+	       );
+
+
+=head1 COPYRIGHT
+
+Copyright (c) 2001
+Daniel Ruoso <daniel@ruoso.com>
+All rights reserved.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+

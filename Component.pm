@@ -8,16 +8,46 @@ use strict;
 
 Oak::Component - Implements component capability in objects
 
-=head1 SYNOPSIS
-
-  use base qw(Oak::Component);
-
 =head1 DESCRIPTION
 
 This module is the base for all objects that needs to
 own other objects and other things.
 Oak::Component objects will use a Oak::Component::Filer filer to store
 the properties.
+
+=head1 HIERARCHY
+
+  Oak::Object
+  Oak::Persistent
+  Oak::Component
+
+=head1 PROPERTIES
+
+=over
+
+=item __XML_FILENAME__
+
+The name of the xml file (needed if this is a top-level)
+
+=item name
+
+All components have a name property.
+
+=back
+
+=head1 EVENTS
+
+=over
+
+=item ev_onCreate
+
+Called after the creation of the object
+
+=item ev_onDestroy
+
+Called before the destruction of the object
+
+=back
 
 =head1 METHODS
 
@@ -85,6 +115,14 @@ sub constructor {
 		$parms{OWNER}->register_child($self);
 	}
 	return $self->SUPER::constructor(%parms);
+}
+
+sub after_construction {
+	my $self = shift;
+	$self->SUPER::after_construction(@_);
+	if ($self->get('ev_onCreate')) {
+		eval $self->get('ev_onCreate');
+	}
 }
 
 =over
@@ -164,6 +202,26 @@ sub get_child {
 		throw Oak::Component::Error::NotRegistered;
 	}
 	return $self->{__owned__}{$key}
+}
+
+=over
+
+=item list_childs
+
+Returns an array with the key of the owned objects of this component
+
+=back
+
+=cut
+
+sub list_childs {
+	my $self = shift;
+	my @array;
+	return () unless ref $self->{__owned__};
+	foreach my $k (keys %{$self->{__owned__}}) {
+		push @array, $k;
+	}
+	return @array;
 }
 
 =over
@@ -393,6 +451,14 @@ sub AUTOLOAD {
 	return $obj;
 }
 
+sub DESTROY {
+	my $self = shift;
+	if ($self->get('ev_onDestroy')) {
+		eval $self->get('ev_onDestroy');
+	}
+	$self->SUPER::DESTROY;
+}
+
 =head1 EXCEPTIONS
 
 The following exceptions are introduced by Oak::Component
@@ -526,10 +592,6 @@ sub stringify {
 1;
 
 __END__
-
-=head1 BUGS
-
-Too early to determine. :)
 
 =head1 COPYRIGHT
 

@@ -6,9 +6,9 @@ use strict;
 
 Oak::Object - Base for all Oak Perl Object Tree
 
-=head1 SYNOPSIS
+=head1 HIERARCHY
 
-  use base qw(Oak::Object);
+  Oak::Object
 
 =head1 DESCRIPTION
 
@@ -16,11 +16,21 @@ This is the base object for all the Oak Project, it implements
 a set of primary functions, that will provide the main functionallity
 of all Oak objects.
 
-=head1 OBJECT METHODS
+=head1 PROPERTIES
+
+=over
+
+=item __CLASSNAME__
+
+The name of the class of the object (needed by the automated creation)
+
+=back
+
+=head1 METHODS
 
 Oak::Object implements the following methods
 
-=over 4
+=over
 
 =item new(PARAMS)
 
@@ -146,10 +156,11 @@ is only a wraper.
 
 sub get {
 	my $self = shift;
+	my @props = @_;
 	my @ret;
-	my %retorno = $self->get_hash(@_);
-	foreach my $p (keys %retorno) {
-		push @ret, $self->{__properties__}{$p};
+	my %retorno = $self->get_hash(@props);
+	foreach my $p (@props) {
+		push @ret, $retorno{$p};
 	}
 	if (scalar @ret == 1) {
 		return $ret[0];
@@ -278,9 +289,10 @@ sub stringify {
 
 __END__
 
-=head1 BUGS
 
-Too early to determine. :)
+=head1 EXAMPLES
+
+  use base qw(Oak::Object);
 
 =head1 COPYRIGHT
 

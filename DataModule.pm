@@ -7,65 +7,27 @@ use base qw(Oak::Component);
 
 Oak::DataModule - Container for non-visual components
 
-=head1 SYNOPSIS
-
-  my $datamodule = new Oak::DataModule(RESTORE_TOPLEVEL => "file.xml");
-
 =head1 DESCRIPTION
 
 This component is the container for the non-visual components, like
 a database connection.
 
-=head1 METHODS
+=head1 HIERARCHY
 
-=over
-
-=item constructor
-
-This method is overwrited to implement the onCreate event.
-
-=back
+  Oak::Object
+  Oak::Persistent
+  Oak::Component
+  Oak::DataModule
 
 =cut
-
-sub constructor {
-	my $self = shift;
-	my %parms = @_;
-	$self->SUPER::constructor(%parms);
-	if ($self->get('onCreate')) {
-		my $str = $self->get('onCreate').'($self)';
-		eval $str;
-	}
-	return 1;
-}
-
-=over
-
-=item DESTROY
-
-This method is overwrited to implement the onDestroy event.
-
-=back
-
-=cut
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY;
-	if ($self->get('onDestroy')) {
-		my $str = $self->get('onDestroy').'($self)';
-		eval $str;
-	}
-}
-
 
 1;
 
 __END__
 
-=head1 BUGS
+=head1 EXAMPLES
 
-Too early to determine. :)
+  my $datamodule = new Oak::DataModule(RESTORE_TOPLEVEL => "file.xml");
 
 =head1 COPYRIGHT
 

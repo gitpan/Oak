@@ -10,34 +10,15 @@ use strict;
 
 Oak::IO::DBI - IO routines to exchange data with databases using DBI
 
-=head1 SYNOPSIS
-
-  require Oak::IO::DBI;
-
-  my $io = new Oak::IO::DBI
-   (
-    name     => "IODBI",	# mandatory (see Oak::Component)
-    dbdriver => "mysql",	# mandatory, any supported by DBI
-    database => "mydatabase",	# mandatory
-    hostname => "hostname",	# mandatory
-    username => "dbusername",	# optional
-    password => "userpasswd",	# optional
-    options => { DBI OPTIONS },	# optional. A hash reference to DBI options
-   )
-
-  P.S.: In the case of the automatic creation by an owner object all the
-  properties will be passed through the RESTORE hash and the OWNER variable.
-  See Oak::Component.
-
 =head1 DESCRIPTION
 
 This module provides access for exchange data with databases using DBI.
 
-=head1 OBJECT PROPERTIES
+=head1 PROPERTIES
 
 =over 4
 
-=item datasource (readonly)
+=item datasource (virtual)
 
 DBI datasorce string, used to create the connection, 
 defined using the parameters passed to new.
@@ -46,20 +27,7 @@ defined using the parameters passed to new.
 
 DBI options. See DBI documentation for more help.
 
-=head1 OBJECT METHODS
-
-=over 4
-
-=item constructor(PARAMS)
-
-Called by new. You do not want do call it by yourself. Generates
-a onCreate event.
-
-Could raise the Oak::Error::ParamsMissing exception.
-
-=back
-
-=cut
+=head1 METHODS
 
 sub constructor {
 	my $self = shift;
@@ -313,9 +281,24 @@ sub stringify {
 
 __END__
 
-=head1 BUGS
+=head1 EXAMPLES
 
-Too early to know...
+  require Oak::IO::DBI;
+
+  my $io = new Oak::IO::DBI
+   (
+    name     => "IODBI",	# mandatory (see Oak::Component)
+    dbdriver => "mysql",	# mandatory, any supported by DBI
+    database => "mydatabase",	# mandatory
+    hostname => "hostname",	# mandatory
+    username => "dbusername",	# optional
+    password => "userpasswd",	# optional
+    options => { DBI OPTIONS },	# optional. A hash reference to DBI options
+   )
+
+  P.S.: In the case of the automatic creation by an owner object all the
+  properties will be passed through the RESTORE hash and the OWNER variable.
+  See Oak::Component.
 
 =head1 COPYRIGHT
 

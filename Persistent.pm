@@ -7,21 +7,17 @@ use base qw(Oak::Object);
 
 Oak::Persistent - Implements persistency in object properties
 
-=head1 SYNOPSIS
-
-  use base qw(Oak::Persistent);
-
 =head1 DESCRIPTION
 
 This module is the base for all objects that needs persistency.
 It implements the basic functions to store the object data.
 
-=head1 OBJECT METHODS
+=head1 METHODS
 
 Oak::Persistent inherits all Oak::Object methods and implements/overrides
 the following
 
-=over 4
+=over
 
 =item after_construction
 
@@ -39,7 +35,7 @@ sub after_construction {
 	return 1;
 }
 
-=over 4
+=over
 
 =item load_initial_properties
 
@@ -56,7 +52,7 @@ sub load_initial_properties {
 	return 1;
 }
 
-=over 4
+=over
 
 =item get_hash(NAME,NAME,...)
 
@@ -95,7 +91,7 @@ sub get_hash {
 	return $self->SUPER::get_hash(@a);
 }
 
-=over 4
+=over
 
 =item set(NAME=>VALUE,NAME=>VALUE,...)
 
@@ -140,7 +136,7 @@ sub feed {
 	return $self->SUPER::set(%feed);
 }
 
-=over 4
+=over
 
 =item choose_filer(NAME)
 
@@ -196,9 +192,9 @@ sub stringify {
 
 __END__
 
-=head1 BUGS
+=head1 EXAMPLES
 
-Too early to determine. :)
+  use base qw(Oak::Persistent);
 
 =head1 COPYRIGHT
 

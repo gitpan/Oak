@@ -8,18 +8,10 @@ use base qw(Oak::Object);
 
 Oak::Filer - Saves Persistent Descendants properties
 
-=head1 SYNOPSIS
+=head1 HIERARCHY
 
-  # To create the default filer
-  require Oak::Filer;
-  my $filer = new Oak::Filer;
-  $filer->store(NAME=>VALUE,NAME=>VALUE);
-  my %props = $filer->load(NAME,NAME);
-
-  -------------
-
-  # to create a especialized filer
-  use base qw(Oak::Filer);
+  Oak::Object
+  Oak::Filer
 
 =head1 DESCRIPTION
 
@@ -60,9 +52,18 @@ sub load {
 
 __END__
 
-=head1 BUGS
+=head1 EXAMPLES
 
-Too early to determine. :)
+  # To create the default filer
+  require Oak::Filer;
+  my $filer = new Oak::Filer;
+  $filer->store(NAME=>VALUE,NAME=>VALUE);
+  my %props = $filer->load(NAME,NAME);
+
+  -------------
+
+  # to create a especialized filer
+  use base qw(Oak::Filer);
 
 =head1 COPYRIGHT
 

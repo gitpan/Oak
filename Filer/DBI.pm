@@ -2,7 +2,6 @@ package Oak::Filer::DBI;
 
 use base qw(Oak::Filer);
 use Error qw(:try);
-use DBI;
 
 use strict;
 
@@ -10,39 +9,40 @@ use strict;
 
 Oak::Filer::DBI - Filer to save/load data into/from DBI tables
 
-=head1 SYNOPSIS
-
-  require Oak::Filer::DBI;
-
-  my $filer = new Oak::Filer::DBI
-   (
-    io => $iodbiobj,		# mandatory, an Oak::IO::DBI object.
-    table => "tablename",	# mandatory to enable load and store.
-				#   table to work in selects and updates
-    where => {primary => value},# this is optional, once itsn't passed 
-				# you assumes that u're creating a new object
-   )
-    
-  my $nome = $filer->load("nome");
-  $filer->store(nome => lc($nome));
-
 =head1 DESCRIPTION
 
 This module provides access for saving data into a DBI table, to be used by
 a Persistent descendant to save its data. Must pass table, and where
 
-=head1 OBJECT METHODS
+=head1 HIERARCHY
 
-=over 4
+  Oak::Object
+  Oak::Filer
+  Oak::Filer::DBI
 
-=item constructor(PARAMS)
+=head1 PROPERTIES
 
-Called by new. You do not want do call it by yourself.
-Prepare to work with determined table and register (setted by privalue).
+=over
 
-Could raise the Oak::Error::ParamsMissing exception.
+=item io
+
+Mandatory property. Defines the Oak::IO::DBI object that will be used
+to communicate with the database. This property contains a reference to
+the Oak::IO::DBI object, not the name.
+
+=item table
+
+Mandatory property. Defines the table that this filer will work on.
+
+=item where
+
+Optional. Contains a hashref with the following format
+  {primarykey => value}
+This will be used to create the custom SQL when fetching data.
 
 =back
+
+=head1 METHODS
 
 =cut
 
@@ -66,7 +66,7 @@ sub constructor {
 Loads one or more properties of the selected DBI table with the selected WHERE statement.
 Returns a hash with the properties.
 
-see do_sql for possible exceptions.
+see Oak::IO::DBI::do_sql for possible exceptions.
 
 =back
 
@@ -91,7 +91,7 @@ sub load {
 
 Saves the data into the selected table with the selected WHERE statement.
 
-see do_sql for possible exceptions.
+see Oak::IO::DBI::do_sql for possible exceptions.
 
 =back
 
@@ -114,6 +114,18 @@ sub store {
         return 1;
 }
 
+=over
+
+=item insert(FIELD=>VALUE,FIELD=>VALUE,...)
+
+Insert a register in the selected table with the data
+in the parameters
+
+see Oak::IO::DBI::do_sql for possible exceptions.
+
+=back
+
+=cut
 
 sub insert {
 	my $self = shift;
@@ -151,9 +163,21 @@ sub make_where_statement {
 
 __END__
 
-=head1 BUGS
+=head1 EXAMPLES
 
-Too early to know...
+  require Oak::Filer::DBI;
+
+  my $filer = new Oak::Filer::DBI
+   (
+    io => $iodbiobj,		# mandatory, an Oak::IO::DBI object.
+    table => "tablename",	# mandatory to enable load and store.
+				#   table to work in selects and updates
+    where => {primary => value},# this is optional, once itsn't passed 
+				# you assumes that u're creating a new object
+   )
+    
+  my $nome = $filer->load("nome");
+  $filer->store(nome => lc($nome));
 
 =head1 COPYRIGHT
 
@@ -161,4 +185,3 @@ Copyright (c) 2001 Daniel Ruoso <daniel@ruoso.com> and Rodolfo Sikora <rodolfo@t
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
-=cut
