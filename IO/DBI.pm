@@ -29,6 +29,8 @@ DBI options. See DBI documentation for more help.
 
 =head1 METHODS
 
+=cut
+
 sub constructor {
 	my $self = shift;
 	my %params = @_;
@@ -48,10 +50,6 @@ sub constructor {
 		  );
 	}
 	$self->connect;
-	if ($self->get('onCreate')) {
-		my $str = $self->get('onCreate').'($self)';
-		eval $str;
-	}
 }
 
 # internal function
