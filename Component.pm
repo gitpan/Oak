@@ -43,10 +43,6 @@ All components have a name property.
 
 Called after the creation of the object
 
-=item ev_onDestroy
-
-Called before the destruction of the object
-
 =back
 
 =head1 METHODS
@@ -120,9 +116,7 @@ sub constructor {
 sub after_construction {
 	my $self = shift;
 	$self->SUPER::after_construction(@_);
-	if ($self->get('ev_onCreate')) {
-		eval $self->get('ev_onCreate');
-	}
+	$self->dispatch('ev_onCreate');
 }
 
 =over
@@ -178,7 +172,6 @@ sub free_child {
 	unless (exists $self->{__owned__}{$key}) {
 		throw Oak::Component::Error::NotRegistered;
 	}
-	$self->{__owned__}{$key}->set_owner(undef);
 	delete $self->{__owned__}{$key};
 	delete $self->{__owned__properties__}{$key};
 	return 1;
@@ -242,7 +235,7 @@ create a circular reference.
 sub set_owner {
 	my $self = shift;
 	my $obj = shift;
-	if (defined $self->{__owner__}) {
+	if (defined $self->{__owner__} && defined $obj) {
 		throw Oak::Component::Error::AlreadyOwned;
 	}
 	$self->{__owner__} = $obj;
@@ -374,11 +367,14 @@ sub _test_filer_create_COMPONENT {
 	my $self = shift;
 	# WILL CREATE THE COMPONENT FILER
 	require Oak::Filer::Component;
-	$self->{__filers__}{COMPONENT} ||= new Oak::Filer::Component(
-								     FILENAME => $self->get("__XML_FILENAME__")
-								    );
-	throw Oak::Persistent::Error::ErrorCreatingFiler
-	  unless $self->{__filers__}{COMPONENT};
+	try {
+		$self->{__filers__}{COMPONENT} ||= new Oak::Filer::Component
+		  (
+		   FILENAME => $self->get("__XML_FILENAME__")
+		  );
+	} otherwise {
+		throw Oak::Persistent::Error::ErrorCreatingFiler;
+	};
 	return 1;
 }
 
@@ -425,6 +421,53 @@ sub set {
 
 =over
 
+=item dispatch(EVENT)
+
+Dispatch the EVENT.
+
+=back
+
+=cut
+
+
+sub dispatch {
+	my $self = shift;
+	my $ev = shift;
+	if ($self->get($ev)) {
+		eval $self->get($ev) or throw(Error::prior());
+	}
+	return 1;
+}
+
+=over
+
+=item dispatch_all
+
+This method will see if any event must be started by this component.
+I.e.: if a submit button was clicked, test if there is an event for
+this button and then launch the event.
+This method must not be overrided. To dispatch an event, just set
+$self->{__events__}{EVENTNAME} = 1, and this function will automatically
+dispatch the event.
+
+=back
+
+=cut
+
+sub dispatch_all {
+	my $self = shift;
+	$self->{__events__} ||= {};
+	foreach my $ev (keys %{$self->{__events__}}) {
+		$self->dispatch($ev);
+	}
+	return 1;
+}
+
+
+
+
+=over
+
 =item AUTOLOAD
 
 Oak::Component introduces AUTOLOAD to provide a quick acess
@@ -449,14 +492,6 @@ sub AUTOLOAD {
 	my $obj;
 	$obj = $self->get_child($name);
 	return $obj;
-}
-
-sub DESTROY {
-	my $self = shift;
-	if ($self->get('ev_onDestroy')) {
-		eval $self->get('ev_onDestroy');
-	}
-	$self->SUPER::DESTROY;
 }
 
 =head1 EXCEPTIONS

@@ -12,4 +12,7 @@ Object.pm
 Persistent.pm
 README
 IO/DBI.pm
+IO/Config.pm
+IO/Log.pm
+IO/Log/Syslog.pm
 t/depends.t

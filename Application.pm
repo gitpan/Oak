@@ -29,7 +29,11 @@ by hand, you need to undef it also.
 =item topLevels
 
 A hashref containing information about the toplevel objects:
-  name => [class, xmlfile]
+  name => [class, xmlfile, persistent]
+
+If the persistent param is defined, the object will not be
+deleted and recreated every itaration of the application.
+This is usefull for Oak::DataModule components.
 
 =item default
 
@@ -61,6 +65,12 @@ sub constructor {
 	delete $parms{default};
 	$self->set('topLevels' => \%parms);
 	$::APPLICATION = $self;
+	foreach my $name (keys %{$self->get('topLevels')}) {
+		next unless
+		  exists $self->get('topLevels')->{$name}->[2] and
+		    defined $self->get('topLevels')->{$name}->[2];
+		$self->initiateTopLevel($name);
+	}
 }
 
 =over
@@ -88,12 +98,12 @@ sub initiateTopLevel {
 	unless (eval "require $class") {
 		throw Oak::Application::Error::ClassNotFound;
 	}
-	my $obj = $class->new(RESTORE_TOPLEVEL => $xmlfile);
-	eval 'if (defined $::TL::'.$name.') { die } else { return 1 }' ||
-	  throw Oak::Application::Error::DuplicatedTopLevel;
-	eval '$::TL::'.$name.' = $obj';
-	if ($self->get('default') eq $name) {
-		eval '$::TL::default = $obj';
+	unless (eval 'if (defined $::TL::'.$name.') { die } else { return 1 }') {
+		my $obj = $class->new(RESTORE_TOPLEVEL => $xmlfile);
+		eval '$::TL::'.$name.' = $obj';
+		if ($self->get('default') eq $name) {
+			eval '$::TL::default = $obj';
+		}		
 	}
 	return 1;
 }
@@ -114,6 +124,9 @@ sub freeAllTopLevel {
 	my $hr_topLevels = $self->get('topLevels');
 	$hr_topLevels = {} unless ref $hr_topLevels;
 	foreach my $name (keys %{$hr_topLevels}) {
+		next if
+		  exists $self->get('topLevels')->{$name}->[2] and
+		    defined $self->get('topLevels')->{$name}->[2];		
 		eval '$::TL::'.$name.' = undef';
 	}
 	$::TL::default = undef;

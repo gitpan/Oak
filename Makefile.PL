@@ -8,7 +8,16 @@ my $mm = new MM
    NAME => "Oak",
    NORECURS => "true",
    PMLIBDIRS => ['IO','Filer'],
-   VERSION => "1.1"
+   VERSION => "1.2",
+   PREREQ_PM => 
+   {
+    'XML::Writer' => '0',
+    'XML::Parser' => '0',
+    'DBI' => '0',
+    'IO' => '0',
+    'Error' => '0',
+    'Carp' => '0'
+   }
   }
  );
 
