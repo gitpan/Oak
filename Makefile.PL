@@ -8,7 +8,7 @@ my $mm = new MM
    NAME => "Oak",
    NORECURS => "true",
    PMLIBDIRS => ['IO','Filer'],
-   VERSION => "1.0-fix1"
+   VERSION => "1.1"
   }
  );
 

@@ -9,7 +9,25 @@ Oak::Filer::XML - Saves/retrieves data to/from a XML file
 
 =head1 DESCRIPTION
 
-This module saves and retrieves a structure from a XML file.
+This module saves and retrieves properties using a XML file.
+the file has the format:
+
+  <!ELEMENT main (prop+)>
+  <!ATTLIST prop
+  name CDATA #REQUIRED
+  value CDATA #REQUIRED>
+
+An example of the XML file is:
+
+  <main>
+    <prop name="filename" value="/tmp/example123"/>
+  </main>
+
+=head1 HIERARCHY
+
+  Oak::Object
+  Oak::Filer
+  Oak::Filer::XML
 
 =head1 PROPERTIES
 
@@ -28,11 +46,6 @@ if type equals file, then this file will be opened
 
 if type equals fh, then this fh will be used
 
-=item HANDLER
-
-Defines a package that contain the parse methods
-defined by XML::Parser
-
 =back
 
 =head1 METHODS
@@ -49,14 +62,6 @@ Overrided to receive the following parameters:
 You must pass one (and just one) of these parameters.
 In the case you miss this will be throwed an
 Oak::Error::ParamsMissing error.
-
-There is another mandatory parameter, which is
-
-  HANDLER => Your::Custom::XML::Handler
-
-The class must follow the specification of XML::Parser,
-if you dont understand what it means, please read its
-documentation
 
 =back
 
@@ -80,11 +85,6 @@ sub constructor {
 	} else {
 		throw Oak::Error::ParamsMissing;
 	}
-	if ($args{HANDLER}) {
-		$self->set(HANDLER => $args{HANDLER});
-	} else {
-		throw Oak::Error::ParamsMissing;
-	}
 	return $self->SUPER::constructor(%args);
 }
 
@@ -92,17 +92,36 @@ sub constructor {
 
 =item store(NAME=>VALUE)
 
-Saves the data into the XML file. Be carefull to set properties
-only at the first level of the hash. If you have to set a property
-that is in a deep level, please save the root of the hash.
-This module do not create any cache. Every time you store a key of the
-hash it will read the XML file.
+Save the properties and the values
 
 =back
 
 =cut
 
 sub store {
+	my $self = shift;
+	$self->load;
+	my %parms = @_;
+	foreach my $p (keys %params) {
+		$self->{__CACHE__}{$p} = $params{$p};
+	}
+	require IO;
+	require XML::Writer;
+	my ($output, $writer);
+	if ($self->get('type') eq "file") {
+		$output = new IO::File(">".$self->get('FILENAME')) || throw Oak::Filer::XML::Error::ErrorWritingXML;
+	} else {
+		$output = $self->get("FILEHANDLE");
+	}
+	$writer = new XML::Writer(OUTPUT => $output) || throw Oak::Filer::XML::Error::ErrorWritingXML;
+	$writer->startTag('main');
+	for (keys %{$self->{__CACHE__}}) {
+		$writer->startTag('prop', 'name' => $_, 'value' => $self->{__CACHE__}{$_});
+		$writer->endTag('prop');
+	}
+	$writer->endTag('main');
+	$writer->end();
+	$output->close();
 	return 1;
 }
 
@@ -110,30 +129,62 @@ sub store {
 
 =item load(NAME,NAME,...)
 
-Loads the data and returns its value (even if it is a reference).
+Loads the data and returns its value
 
 =back
 
 =cut
 
 sub load {
-	return 1;
+	my $self = shift;
+	my @properties = @_;
+	require XML::Parser;
+	unless ($self->{__CACHE__}) {
+		my ($xml, $xml_hash);
+		try {
+			$xml = new XML::Parser(Style => 'Oak::Filer::XML::XMLHandlers');
+			if ($self->get('type') eq "file") {
+				$xml_hash = $xml->parsefile($self->get('FILENAME'));
+			} else {
+				$xml_hash = $xml->parse($self->get('FILEHANDLE'));
+			}
+		} except {
+			throw Oak::Filer::Component::Error::ErrorReadingXML;
+		};
+		throw Oak::Filer::Component::Error::ErrorReadingXML unless ref $xml_hash eq "HASH";
+		$self->{__CACHE__} = $xml_hash;
+	}
+	if (scalar @properties == 1) {
+		return $self->{__CACHE__}{$properties[0]};
+	} else {
+		my @ret;
+		foreach my $p (@properties) {
+			push @ret, $self->{__CACHE__}{$p}
+		}
+		return @ret;
+	}
 }
 
-=over 4
+# PACKAGE FOR XML READING
+#################################################################
+package Oak::Filer::XML::XMLHandlers;
 
-=item remove(NAME)
+sub Init {
+	$Oak::Filer::XML::XMLHandlers::PROPS = {};
+}
 
-This function will delete this key from the hash and store.
-As the store function, it will retrieve the hash from the
-XML file again.
+sub Start {
+        my $p = shift;
+        my $elem = shift;
+        my %vars = @_;
+        if ($elem eq "prop") {
+		$Oak::Filer::XML::XMLHandlers::PROPS->{$vars{name}} = $vars{value}
+        }
+}
 
-=back
 
-=cut
-
-sub remove {
-	return 1;
+sub Final {
+        return $Oak::Filer::XML::XMLHandlers::PROPS;
 }
 
 
@@ -145,13 +196,9 @@ __END__
 
   # To create the default filer
   require Oak::Filer::XML;
-  my $filer = new Oak::Filer::XML;
+  my $filer = new Oak::Filer::XML(TYPE => 'file', FILENAME => 'config.xml');
   $filer->store(NAME=>VALUE);
   my %props = $filer->load(NAME);
-
-=head1 RESTRICTIONS
-
-This is a skeleton class. It does not work. Actually I did not need it yet :)
 
 =head1 COPYRIGHT
 

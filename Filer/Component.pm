@@ -136,9 +136,11 @@ sub store {
 #################################################################
 package Oak::Filer::Component::XMLHandlers;
 
-$Oak::Filer::Component::XMLHandlers::OWNEDNAME = '';
-%Oak::Filer::Component::XMLHandlers::OWNED = ();
-%Oak::Filer::Component::XMLHandlers::MINE = ();
+sub Init {
+	$Oak::Filer::Component::XMLHandlers::OWNEDNAME = '';
+	%Oak::Filer::Component::XMLHandlers::OWNED = ();
+	%Oak::Filer::Component::XMLHandlers::MINE = ();
+}
 
 sub Start {
         my $p = shift;
