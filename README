@@ -30,6 +30,8 @@ create an Oak Class.
   when you override some methods.
 . Nobody implements new, implement constructor instead, but nobody call constructor, call
   new instead.
+. Error handling is made using Error module, check is perldoc to underestand what i'm
+  talking about.
 . That's it...
 . Please contact me if you want to develop an Oak Object, if applicable your module will
   enter in the Oak main distribution.
@@ -40,6 +42,7 @@ COPYRIGHT ----------------------------------------
 Copyright (c) 2001
 Daniel Ruoso <daniel@ruoso.com>
 Aguimar Mendonca Neto <aguimar@email.com.br>
+Rodolfo Sikora de Melo <vo0do0@trevas.net>
 All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

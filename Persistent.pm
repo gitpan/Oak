@@ -34,8 +34,8 @@ the beggining of the function if you overrides it
 
 sub after_construction {
 	my $self = shift;
-	$ret = $self->load_initial_properties;
-	return $ret unless $ret;
+	$self->SUPER::after_construction;
+	$self->load_initial_properties;
 	return 1;
 }
 
@@ -43,7 +43,7 @@ sub after_construction {
 
 =item load_initial_properties
 
-This function is called at constructor to load the properties that
+This function is called at after_construction to load the properties that
 always will be used by the object. Simply call get with all the
 properties you need.
 
@@ -120,6 +120,26 @@ sub set {
 	$self->SUPER::set(%args); # just save $self->{__properties__}
 }
 
+=over
+
+=item feed(NAME=>VALUE,NAME=>VALUE,...)
+
+Defines a property without using any filer. Usefull at constructor, when you
+want to set the properties you will use to create the filer. Or for objects
+created that you already have the data (you made a optimized sql, and you have
+the data of severall objects), this will make the object not to use the filer 
+to access this property.
+
+=back
+
+=cut
+
+sub feed {
+	my $self = shift;
+	my %feed = @_;
+	return $self->SUPER::set(%feed);
+}
+
 =over 4
 
 =item choose_filer(NAME)
@@ -149,12 +169,28 @@ sub test_filer {
 	my $self = shift;
 	my $name = shift;
 	require Oak::Filer;
+	# Oak filer is reliable. Does nothing.
 	$self->{__filers__}{$name} ||= new Oak::Filer;
-	unless ($self->{__filers__}{$name}) {
-		$self->call_exception('ERROR CREATING FILER');
-	}
 	return 1;
 }
+
+package Oak::Persistent::Error::ErrorCreatingFiler;
+use base qw (Error);
+
+=over
+
+=item Oak::Persistent::Error::ErrorCreatingFiler
+
+The filer was still undef after the creation.
+
+=back
+
+=cut
+
+sub stringify {
+	return "Error creating filer.";
+}
+
 
 1;
 
@@ -172,4 +208,3 @@ Aguimar Mendonca Neto <aguimar@email.com.br>
 All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-

@@ -1,0 +1,8 @@
+<!ELEMENT main (prop+, owned*)>
+<!ELEMENT owned (prop+)>
+<!ATTLIST owned
+name CDATA #REQUIRED>
+<!ELEMENT prop EMPTY>
+<!ATTLIST prop 
+name CDATA #REQUIRED
+value CDATA #REQUIRED>

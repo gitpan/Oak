@@ -27,8 +27,8 @@ Oak::Object implements the following methods
 This method should not be overriden by any module. It calls
 constructor passing all the parameters it received and then
 calls after_construction and returns the object reference.
-In case of any exception in this routines, it will call
-call_exception passing the return of the function which failed.
+This method also creates a mandatory property __CLASSNAME__,
+that will be used in the internals of Oak.
 
 =back
 
@@ -38,16 +38,9 @@ sub new {
 	my $class = shift;
 	my $self = bless {}, $class;
 	my $ret;
-	$ret = $self->constructor(@_);
-	unless ($ret) {
-		$self->call_exception($ret);
-		return undef;
-	}
-	$ret = $self->after_construction;
-	unless ($ret) {
-		$self->call_exception($ret);
-		return undef;
-	}
+	$self->{__properties__}{__CLASSNAME__} = ref($self);
+	$self->constructor(@_);
+	$self->after_construction;
 	return $self;
 }
 
@@ -56,9 +49,8 @@ sub new {
 =item constructor(PARAMS)
 
 This method is called automatically from new. You should not call
-it unless you know what you are doing. It MUST return a true value
-in case of success. In case of failure, the return of this function
-will be passed to call_exception.
+it unless you know what you are doing. The return of this function
+is not checked.  If you want to raise an error use throw (see L<Error>).
 
 MUST CALL SUPER IN THE FUNCTION IF YOU OVERRIDES IT
 
@@ -91,6 +83,22 @@ sub after_construction {
 
 =over 4
 
+=item message(MESSAGE)
+
+Receives MESSAGE and execute some action associated with that message. Abstract
+in Oak::Object, but you can override it to provide new message handlers. But
+remember to call SUPER always you override this function.
+
+=back
+
+=cut
+
+sub message {
+	# Abstract function
+}
+
+=over 4
+
 =item assign(OBJECT)
 
 Assign all OBJECT properties to this object
@@ -105,24 +113,6 @@ sub assign {
 	foreach my $p ($obj->get_property_array) {
 		$self->set($p => $obj->get($p));
 	}
-}
-
-=over 4
-
-=item call_exception(MESSAGE)
-
-Handles an exception with code MESSAGE. The default handler is die MESSAGE.
-If you override this function, remember to call SUPER if you do not 
-find MESSAGE in the exception table.
-
-=back
-
-=cut
-
-sub call_exception {
-	my $self = shift;
-	my $msg = shift;
-	die $msg;
 }
 
 =over 4
@@ -232,6 +222,25 @@ sub hierarchy_tree {
 
 =over
 
+=item instance_of(CLASS)
+
+Tests if this object or any of its superclasses is a instance of CLASS
+
+=back
+
+=cut
+
+sub instance_of {
+	my $self = shift;
+	my $class = shift;
+	foreach my $c ($self->hierarchy_tree) {
+		return 1 if $c eq $class;
+	}
+	return 0;
+}
+
+=over
+
 =item DESTROY
 
 Always you implement DESTROY function, remember to call SUPER.
@@ -239,6 +248,31 @@ Always you implement DESTROY function, remember to call SUPER.
 =back
 
 =cut
+
+=head1 EXCEPTION HANDLING
+
+Oak uses the module L<Error> to handle the exceptions with the
+syntax try/throw/catch/except/otherwise/finally. And in this case
+all the errors must be classes. And this module introduces some 
+(for now, just one :).
+
+=over
+
+=item Oak::Error::ParamsMissing
+
+This class is used in the constructors if the required params were not passed.
+
+=back
+
+=cut
+
+package Oak::Error::ParamsMissing;
+
+use base qw (Error);
+
+sub stringify {
+	return "Missing parameters";
+}
 
 1;
 

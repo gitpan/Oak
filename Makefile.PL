@@ -6,5 +6,5 @@ WriteMakefile
    ABSTRACT => "Perl Oak Component Tree",
    NAME => "Oak",
    NORECURS => 1,
-   VERSION => "0.01"
+   VERSION => "0.3"
   );

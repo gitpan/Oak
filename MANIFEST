@@ -1,6 +1,13 @@
 Object.pm
 Persistent.pm
 Filer.pm
+Filer/Component.pm
+Filer/Component.dtd
+Filer/DBI.pm
+IO/DBI.pm
+Component.pm
+DataModule.pm
+Application.pm
 Makefile.PL
 MANIFEST
 README
