@@ -98,12 +98,11 @@ sub initiateTopLevel {
 	unless (eval "require $class") {
 		throw Oak::Application::Error::ClassNotFound;
 	}
-	unless (eval 'if (defined $::TL::'.$name.') { die } else { return 1 }') {
-		my $obj = $class->new(RESTORE_TOPLEVEL => $xmlfile);
-		eval '$::TL::'.$name.' = $obj';
+	if (eval 'if (defined $::TL::'.$name.') { die } else { return 1 }') {
+		my $obj = $class->new(RESTORE_TOPLEVEL => $xmlfile, DECLARE_GLOBAL => 1);
 		if ($self->get('default') eq $name) {
 			eval '$::TL::default = $obj';
-		}		
+		}
 	}
 	return 1;
 }

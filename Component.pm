@@ -62,6 +62,10 @@ If you override this method, you MUST call SUPER.
 In the case of the name property is not passed in RESTORE, the constructor
 will throw a Oak::Component::Error::MissingComponentName.
 
+If this is a top-level component, you can pass the parameter DECLARE_GLOBAL
+to create the $::TL::name reference... (This is used by Oak::Application)
+you probably will not use it by yourself)
+
 In the case of error in one of owned objects, the function will throw:
 - Oak::Component::Error::MissingOwnedClassname if __CLASSNAME__ not found.
 - Oak::Component::Error::MissingOwnedFile if require return a error.
@@ -109,6 +113,9 @@ sub constructor {
 	}
 	if (ref $parms{OWNER}) {
 		$parms{OWNER}->register_child($self);
+	}
+	if ($parms{DECLARE_GLOBAL}) {
+		eval '$::TL::'.$self->get('name').' = $self';
 	}
 	return $self->SUPER::constructor(%parms);
 }
@@ -434,7 +441,15 @@ sub dispatch {
 	my $self = shift;
 	my $ev = shift;
 	if ($self->get($ev)) {
-		eval $self->get($ev) or throw(Error::prior());
+		my $ev = $self->get($ev);
+		my $result = eval $ev;
+		if ($@) {
+			if (my $err = Error::prior) {
+				$err->throw
+			} else {
+				throw Error::Simple($@);
+			}
+		}
 	}
 	return 1;
 }
