@@ -134,22 +134,6 @@ sub freeAllTopLevel {
 
 =over
 
-=item DESTROY
-
-Overwrited to undef the objects created in the ::TL namespace.
-
-=back
-
-=cut
-
-sub DESTROY {
-	my $self = shift;
-	$self->freeAllTopLevel;
-	return $self->SUPER::DESTROY;
-}
-
-=over
-
 =item run
 
 Abstract in Oak::Application, each type of application will

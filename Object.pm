@@ -260,6 +260,10 @@ Always you implement DESTROY function, remember to call SUPER.
 
 =cut
 
+sub DESTROY {
+	return 1;
+}
+
 =head1 EXCEPTION HANDLING
 
 Oak uses the module L<Error> to handle the exceptions with the

@@ -84,6 +84,7 @@ sub constructor {
 		$self->test_filer("COMPONENT");
 		$parms{RESTORE} = $self->{__filers__}{"COMPONENT"}->load("mine");
 		$parms{RESTORE}{__owned__} = $self->{__filers__}{"COMPONENT"}->load("owned");
+		delete $parms{RESTORE_TOPLEVEL};
 	}
 	if (ref($parms{RESTORE}) eq 'HASH') {
 		throw Oak::Component::Error::MissingComponentName unless $parms{RESTORE}{name};
@@ -110,6 +111,10 @@ sub constructor {
 			}
 		}
 		$self->child_update;
+	} else {
+		warn %parms;
+		$self->feed(%parms);
+		throw Oak::Component::Error::MissingComponentName unless $self->get('name');
 	}
 	if (ref $parms{OWNER}) {
 		$parms{OWNER}->register_child($self);
@@ -317,7 +322,8 @@ is only called if the component is in "design time" (see is_designing)
 
 sub store_all {
 	my $self = shift;
-	return $self->store
+	$self->_test_filer_create_COMPONENT;
+	return $self->{__filers__}{COMPONENT}->store
 	  (
 	   mine => $self->{__properties__},
 	   owned => $self->{__owned__properties__}
@@ -352,9 +358,6 @@ Overrided to create and test the COMPONENT filer when needed.
 The COMPONENT filer needs the __XML_FILENAME__ property defined
 to create using the correct file.
 
-Throws Oak::Persistent::Error::ErrorCreatingFiler if
-filer still false after the creation.
-
 =back
 
 =cut
@@ -374,14 +377,10 @@ sub _test_filer_create_COMPONENT {
 	my $self = shift;
 	# WILL CREATE THE COMPONENT FILER
 	require Oak::Filer::Component;
-	try {
-		$self->{__filers__}{COMPONENT} ||= new Oak::Filer::Component
-		  (
-		   FILENAME => $self->get("__XML_FILENAME__")
-		  );
-	} otherwise {
-		throw Oak::Persistent::Error::ErrorCreatingFiler;
-	};
+	$self->{__filers__}{COMPONENT} ||= new Oak::Filer::Component
+	  (
+	   FILENAME => $self->get("__XML_FILENAME__")
+	  );
 	return 1;
 }
 

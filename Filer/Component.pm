@@ -103,7 +103,6 @@ when trying to read the XML file.
 
 sub store {
 	my $self = shift;
-	$self->load;
 	my %parms = @_;
 	$self->{__MINE__} = $parms{mine} if ref $parms{mine} eq "HASH";
 	$self->{__OWNED__} = $parms{owned} if ref $parms{owned} eq "HASH";
