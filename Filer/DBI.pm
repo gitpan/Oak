@@ -19,9 +19,8 @@ Oak::Filer::DBI - Filer to save/load data into/from DBI tables
     io => $iodbiobj,		# mandatory, an Oak::IO::DBI object.
     table => "tablename",	# mandatory to enable load and store.
 				#   table to work in selects and updates
-    where => {primary => value},# this option must be passed to
-				#   enable load and store functions.
-				#   name and value of the keys to where sql clause
+    where => {primary => value},# this is optional, once itsn't passed 
+				# you assumes that u're creating a new object
    )
     
   my $nome = $filer->load("nome");
@@ -30,7 +29,7 @@ Oak::Filer::DBI - Filer to save/load data into/from DBI tables
 =head1 DESCRIPTION
 
 This module provides access for saving data into a DBI table, to be used by
-a Persistent descendant to save its data. Must pass table, prikey and privalue
+a Persistent descendant to save its data. Must pass table, and where
 
 =head1 OBJECT METHODS
 
@@ -55,8 +54,6 @@ sub constructor {
 	   io => $params{io},
 	   where => $params{where},
 	   table => $params{table},
-	   prikey => $params{prikey},
-	   privalue => $params{privalue}
 	  );
 	$self->get('io') || throw Oak::Error::ParamsMissing;
 }
@@ -101,20 +98,40 @@ see do_sql for possible exceptions.
 =cut
 
 sub store {
-	my $self = shift;	
+        my $self = shift;
+        my $table = $self->get('table');
+        my $where = $self->make_where_statement;
+        return 0 unless $table && $where;
+        my %args = @_;
+        my @fields;
+        foreach my $p (keys %args) {
+                $args{$p} = $self->get('io')->quote($args{$p});
+                push @fields, "$p=$args{$p}"
+        }
+        my $set = join(',', @fields);
+        my $sql = "UPDATE $table SET $set WHERE $where";
+        $self->get('io')->do_sql($sql);
+        return 1;
+}
+
+
+sub insert {
+	my $self = shift;
 	my $table = $self->get('table');
-	my $where = $self->make_where_statement;
-	return 0 unless $table && $where;
+	return 0 unless $table;
 	my %args = @_;
 	my @fields;
+	my $sql;
 	foreach my $p (keys %args) {
 		$args{$p} = $self->get('io')->quote($args{$p});
 		push @fields, "$p=$args{$p}"
 	}
+
 	my $set = join(',', @fields);
-	my $sql = "UPDATE $table SET $set WHERE $where";
-	$self->get('io')->do_sql($sql);
-	return 1;
+
+	$sql = "INSERT INTO $table SET $set";
+	my $sth = $self->get('io')->do_sql($sql);
+	return $sth;
 }
 
 #internal function

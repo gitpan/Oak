@@ -148,7 +148,8 @@ sub Start {
 			$Oak::Filer::Component::XMLHandlers::MINE{$vars{name}} = $vars{value}
 		}
         } elsif ($elem eq "owned") {
-                $Oak::Filer::Component::XMLHandlers::OWNEDNAME = $vars{name}
+                $Oak::Filer::Component::XMLHandlers::OWNEDNAME = $vars{name};
+		$Oak::Filer::Component::XMLHandlers::OWNED{$vars{name}}{name} = $vars{name};
 	}
 }
 
