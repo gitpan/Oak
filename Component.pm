@@ -112,7 +112,6 @@ sub constructor {
 		}
 		$self->child_update;
 	} else {
-		warn %parms;
 		$self->feed(%parms);
 		throw Oak::Component::Error::MissingComponentName unless $self->get('name');
 	}
