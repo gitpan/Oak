@@ -9,7 +9,7 @@ components and the owned component's properties.
 The main tag is the base tag. Defines the main component.
 This tag must contain prop tags and/or owned tags.
 -->
-<!ELEMENT main (prop+, owned*)>
+<!ELEMENT oak-component (prop+, owned*)>
 <!--
 The owned tag defines a component owned by the main
 component. Must contain prop tags. The owned tag

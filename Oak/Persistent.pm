@@ -82,11 +82,12 @@ sub get_hash {
 		push @{$f{$filer}},$p;
 	}
 	foreach my $fil (keys %f) {
-		%{$self->{__properties__}} =
-		  (
-		   %{$self->{__properties__}},
-		   $self->{__filers__}{$fil}->load(@{$f{$fil}})
-		  );
+		my @result = $self->{__filers__}{$fil}->load(@{$f{$fil}});
+		if (scalar(@result) == 1) {
+			next;
+		} else {
+			%{$self->{__properties__}} = (%{$self->{__properties__}},@result);
+		}
 	}
 	return $self->SUPER::get_hash(@a);
 }

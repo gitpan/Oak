@@ -2,8 +2,9 @@
 
 use strict;
 use Test;
-BEGIN { plan tests => 6 }
+BEGIN { plan tests => 7 }
 
+BEGIN{ use Error 0.15; ok(1) };
 require XML::Parser;
 ok(1);
 require XML::Writer;

@@ -28,12 +28,12 @@ L<Oak::IO::DBI|Oak::IO::DBI>
 
 =over 4
 
-=item datasource (virtual)
+=item datasource
 
-DBI datasorce string, used to create the connection, 
-defined using the parameters passed to new.
+DBI datasorce string, used to create the connection. See
+perldoc DBI for more information.
 
-=item hostname,database,dbdriver,username,password,options
+=item username,password,options
 
 DBI options. See DBI documentation for more help.
 
@@ -69,9 +69,7 @@ sub constructor {
 		}
 		$self->set	# Avoid inexistent properties
 		  (
-		   hostname => $params{hostname},
-		   database => $params{database},
-		   dbdriver => $params{dbdriver},
+		   datasource => $params{datasource},
 		   username => $params{username},
 		   password => $params{password},
 		   options => $params{options},
@@ -85,9 +83,7 @@ sub _test_required_params {
 	my $self = shift;
 	my %params = @_;
 	return undef unless (
-			     $params{dbdriver} &&
-			     $params{database} &&
-			     $params{hostname}
+			     $params{datasource}
 			    );
 	return 1;
 }
@@ -148,19 +144,6 @@ sub do_sql {
 	return $sth;
 }
 
-# does not need documentation, this implementation is only used internally.
-sub get_hash {
-	my $self = shift;
-	my @props = @_;
-	for (@props) {
-		/^datasource$/ && do {
-			$self->{__properties__}{$_} = "DBI:".$self->get('dbdriver').":database=".$self->get('database').";host=".$self->get('hostname');
-			next;
-		}
-	}
-	return $self->SUPER::get_hash(@props);
-}
-
 =over
 
 =item quote
@@ -216,6 +199,35 @@ sub disconnect {
 	$self->{dbh}->disconnect if $self->{dbh};
 	$self->{dbh} = undef;
 	$self->dispatch('ev_onDisconnect');
+	return 1;
+}
+
+
+=over
+
+=item begin_work, commit, rollback
+
+Calls the method with the same name at DBI.
+
+=back
+
+=cut
+
+sub begin_work {
+	my $self = shift;
+	$self->{dbh}->begin_work if $self->{dbh};
+	return 1;
+}
+
+sub commit {
+	my $self = shift;
+	$self->{dbh}->commit if $self->{dbh};
+	return 1;
+}
+
+sub rollback {
+	my $self = shift;
+	$self->{dbh}->rollback if $self->{dbh};
 	return 1;
 }
 

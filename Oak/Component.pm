@@ -90,12 +90,13 @@ sub constructor {
 		# BUILD $parms{RESTORE} HASH.
 		$self->feed("__XML_FILENAME__" => $parms{RESTORE_TOPLEVEL});
 		$self->test_filer("COMPONENT");
-		$parms{RESTORE} = $self->{__filers__}{"COMPONENT"}->load("mine");
-		$parms{RESTORE}{__owned__} = $self->{__filers__}{"COMPONENT"}->load("owned");
+		my $xml_hash = $self->{__filers__}{"COMPONENT"}->load("mine");
+		$parms{RESTORE} = $xml_hash->{mine};
+		$parms{RESTORE}{__owned__} = $xml_hash->{owned};
 		delete $parms{RESTORE_TOPLEVEL};
 	}
 	if (ref($parms{RESTORE}) eq 'HASH') {
-		throw Oak::Component::Error::MissingComponentName unless $parms{RESTORE}{name};
+		throw Oak::Component::Error::MissingComponentName -text => ref $self unless $parms{RESTORE}{name};
 		foreach my $p (keys %{$parms{RESTORE}}) {
 			next if $p eq '__owned__';
 			$self->feed($p => $parms{RESTORE}{$p});
@@ -104,11 +105,11 @@ sub constructor {
 			foreach my $o (keys %{$parms{RESTORE}{__owned__}}) {
 				# we know about the mandatory property __CLASSNAME__
 				my $class = $parms{RESTORE}{__owned__}{$o}{__CLASSNAME__};
-				throw Oak::Component::Error::MissingOwnedClassname unless $class;
+				throw Oak::Component::Error::MissingOwnedClassname -text => $o unless $class;
 				# We must load the module of the object
 				my $result = eval "require $class";
 				if (!$result || $@) {
-					throw Oak::Component::Error::MissingOwnedFile;
+					throw Oak::Component::Error::MissingOwnedFile -text => $o;
 				}
 				my $obj = $class->new
 				  (
@@ -116,13 +117,13 @@ sub constructor {
 				   IS_DESIGNING => $parms{IS_DESIGNING},
 				   OWNER => $self
 				  );
-				throw Oak::Component::Error::ErrorCreatingOwned unless $obj;
+				throw Oak::Component::Error::ErrorCreatingOwned -text => $o unless $obj;
 			}
 		}
 		$self->child_update;
 	} else {
 		$self->feed(%parms);
-		throw Oak::Component::Error::MissingComponentName unless $self->get('name');
+		throw Oak::Component::Error::MissingComponentName -text => ref $self unless $self->get('name');
 	}
 	if (ref $parms{OWNER}) {
 		$parms{OWNER}->register_child($self);
@@ -160,7 +161,7 @@ sub register_child {
 	for my $p1 (@objs) {
 		next unless ref $p1;
 		if (exists $self->{__owned__}{$p1->get('name')}) {
-			throw Oak::Component::Error::AlreadyRegistered;
+			throw Oak::Component::Error::AlreadyRegistered -text => $p1->get('name');
 		}
 		$self->{__owned__}{$p1->get('name')} = $p1;
 		# This code is dangerous...
@@ -190,7 +191,7 @@ sub free_child {
 	my $self = shift;
 	my $key = shift;
 	unless (exists $self->{__owned__}{$key}) {
-		throw Oak::Component::Error::NotRegistered;
+		throw Oak::Component::Error::NotRegistered -text => $key;
 	}
 	delete $self->{__owned__}{$key};
 	delete $self->{__owned__properties__}{$key};
@@ -212,7 +213,7 @@ sub get_child {
         my $self = shift;
 	my $key = shift;
 	unless (exists $self->{__owned__}{$key}) {
-		throw Oak::Component::Error::NotRegistered;
+		throw Oak::Component::Error::NotRegistered -text => $key;
 	}
 	return $self->{__owned__}{$key}
 }
@@ -255,9 +256,6 @@ create a circular reference.
 sub set_owner {
 	my $self = shift;
 	my $obj = shift;
-	if (defined $self->{__owner__} && defined $obj) {
-		throw Oak::Component::Error::AlreadyOwned;
-	}
 	$self->{__owner__} = $obj;
 	return 1;
 }
@@ -278,9 +276,6 @@ sub change_name {
 	my $self = shift;
 	my $newname = shift;
 	if (ref $self->{__owner__}) {
-		if ($self->{__owner__}->get_child($newname)) {
-			throw Oak::Component::Error::AlreadyRegistered;
-		}
 		my $oldname = $self->get('name');
 		$self->feed(name => $newname);
 		my $owner_obj = $self->{__owner__};
@@ -452,7 +447,7 @@ sub dispatch {
 	my $ev = shift;
 	if ($self->get($ev)) {
 		my $ev = $self->get($ev);
-		my $result = eval $ev;
+		eval $ev;
 		if ($@) {
 			if (my $err = Error::prior) {
 				$err->throw
@@ -539,7 +534,8 @@ package Oak::Component::Error::MissingOwnedClassname;
 use base qw (Error);
 
 sub stringify {
-	return "Missing __CLASSNAME__ property while trying to create owned";
+	my $self = shift;
+	return "Missing __CLASSNAME__ property while trying to create owned ".$self->{-text};
 }
 
 package Oak::Component::Error::MissingOwnedFile;
@@ -557,7 +553,8 @@ __CLASSNAME__ property this exception is throwed.
 =cut
 
 sub stringify {
-	return "Error requiring module.";
+	my $self = shift;
+	return "Error requiring module. ".$self->{-text};
 }
 
 package Oak::Component::Error::ErrorCreatingOwned;
@@ -574,7 +571,8 @@ If the new of the class returns false, this error is raised.
 =cut
 
 sub stringify {
-	return "Error creating object";
+	my $self = shift;
+	return "Error creating object".$self->{-text};
 }
 
 package Oak::Component::Error::AlreadyOwned;
@@ -592,7 +590,8 @@ an owner
 =cut
 
 sub stringify {
-	return "This object already has an owner";
+	my $self = shift;
+	return "This object already has an owner".$self->{-text};
 }
 
 package Oak::Component::Error::NotRegistered;
@@ -610,7 +609,8 @@ registered
 =cut
 
 sub stringify {
-	return "This object is not registered";
+	my $self = shift;
+	return "This object is not registered".$self->{-text};
 }
 
 package Oak::Component::Error::AlreadyRegistered;
@@ -628,7 +628,8 @@ already used.
 =cut
 
 sub stringify {
-	return "This key has been already registered.";
+	my $self = shift;
+	return "This key has been already registered.".$self->{-text};
 }
 
 package Oak::Component::Error::MissingComponentName;
@@ -645,7 +646,8 @@ Missing the name property
 =cut
 
 sub stringify {
-	return "The name property is mandatory.";
+	my $self = shift;
+	return "The name property is mandatory.".$self->{-text};
 }
 
 

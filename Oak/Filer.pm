@@ -47,7 +47,7 @@ Abstract in Oak::Filer, loads the specified data.
 =cut
 
 sub load {
-	return 1;
+	return ();
 }
 
 1;

@@ -184,6 +184,36 @@ sub make_where_statement {
 	return join(' AND ',@fields);
 }
 
+=over
+
+=item begin_work, commit, rollback
+
+Calls the method with the same name at DBI.
+
+=back
+
+=cut
+
+sub begin_work {
+	my $self = shift;
+	$self->get('io')->begin_work;
+	return 1;
+}
+
+sub commit {
+	my $self = shift;
+	$self->get('io')->commit;
+	return 1;
+}
+
+sub rollback {
+	my $self = shift;
+	$self->get('io')->rollback;
+	return 1;
+}
+
+
+
 1;
 
 __END__

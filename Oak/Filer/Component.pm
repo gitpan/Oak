@@ -58,7 +58,7 @@ sub constructor{
 
 =item load
 
-Load the information from the XML file and return one of the following properties
+Load the information from the XML file and return the following properties inside a hash
   "mine" => the properties of the owner of this XML
   "owned" => a hash with all the owned components and their properties
 
@@ -81,10 +81,7 @@ sub load {
 		throw Oak::Filer::Component::Error::ErrorReadingXML;
 	};
 	throw Oak::Filer::Component::Error::ErrorReadingXML unless ref $xml_hash eq "HASH";
-	$self->{__MINE__} = $xml_hash->{mine};
-	$self->{__OWNED__} = $xml_hash->{owned};
-	return $self->{__MINE__} if $what eq 'mine';
-	return $self->{__OWNED__} if $what eq 'owned';
+	return $xml_hash;
 }
 
 =over
@@ -114,20 +111,23 @@ sub store {
 	my ($output, $writer);
 	$output = new IO::File(">".$self->get('FILENAME')) || throw Oak::Filer::Component::Error::ErrorWritingXML;
 	$writer = new XML::Writer(OUTPUT => $output, DATA_MODE => 1, DATA_INDENT => 4) || throw Oak::Filer::Component::Error::ErrorWritingXML;
-	$writer->startTag('main');
-	for (keys %{$self->{__MINE__}}) {
-		$writer->startTag('prop', 'name' => $_, 'value' => $self->{__MINE__}{$_});
-		$writer->endTag('prop');
+	$writer->startTag('oak-component');
+	foreach my $k (sort keys %{$self->{__MINE__}}) {
+		next if $k eq "__XML_FILENAME__";
+		next if $k eq "__CLASSNAME__";
+		next if $self->{__MINE__}{$k} eq "";
+		$writer->emptyTag('prop', 'name' => $k, 'value' => $self->{__MINE__}{$k});
 	}
-	for my $element (keys %{$self->{__OWNED__}}) {
+	for my $element (sort keys %{$self->{__OWNED__}}) {
 		$writer->startTag('owned', 'name' => $element);
-		for (keys %{$self->{__OWNED__}{$element}}) {
-			$writer->startTag('prop', 'name' => $_, 'value' => $self->{__OWNED__}{$element}{$_});
-			$writer->endTag('prop');
+		foreach my $k (sort keys %{$self->{__OWNED__}{$element}}) {
+			next if $k eq "name";
+			next if $self->{__OWNED__}{$element}{$k} eq "";
+			$writer->emptyTag('prop', 'name' => $k, 'value' => $self->{__OWNED__}{$element}{$k});
 		}
 		$writer->endTag('owned');
 	}	
-	$writer->endTag('main');
+	$writer->endTag('oak-component');
 	$writer->end();
 	$output->close();
 	return 1;
@@ -244,11 +244,10 @@ __END__
 					FILENAME => "tralala.xml"
 				       )
 
-  my $hr_props = $filer->load("mine");
-  my $hr_owned = $filer->load("owned");
+  my $hash = $filer->load();
   $filer->store(
-		mine => $hr_props,
-		owned => $hr_owned
+		mine => $hash->{mine},
+		owned => $hash->{owned}
 	       );
 
 
